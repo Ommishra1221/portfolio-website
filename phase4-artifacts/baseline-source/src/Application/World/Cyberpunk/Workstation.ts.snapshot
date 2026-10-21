@@ -1,0 +1,106 @@
+import * as THREE from 'three';
+import RoomKit, { Triple } from './RoomKit';
+import { RoomMaterials } from './Materials';
+
+function createKeyboard(kit: RoomKit, materials: RoomMaterials, parent: THREE.Group) {
+    const keyboard = kit.group(parent, 'MechanicalKeyboard', [-260, -355, 1320]);
+    kit.box(keyboard, materials.graphite, [1660, 110, 620], [0, 0, 0], 'KeyboardCase', true);
+    kit.box(keyboard, materials.black, [1610, 20, 570], [0, 65, 0], 'SwitchPlate', true);
+    kit.box(keyboard, materials.violet, [1580, 5, 8], [0, -22, 311], 'KeyboardUnderglow');
+    const keys: Array<{ position: Triple; scale: Triple }> = [];
+    for (let row = 0; row < 4; row++) {
+        for (let column = 0; column < 15; column++) {
+            keys.push({ position: [-728 + column * 104, 97, -225 + row * 105], scale: [91, 48, 89] });
+        }
+    }
+    for (const x of [-728, -614, -500, 500, 614, 728]) {
+        keys.push({ position: [x, 97, 200], scale: [94, 48, 89] });
+    }
+    keys.push({ position: [0, 97, 200], scale: [740, 48, 89] });
+    kit.instances(keyboard, kit.rounded, materials.keys, keys, 'Keycaps/67');
+    // Recessed light gaps, not one material/light per key.
+    for (let row = 0; row < 4; row++) {
+        kit.box(keyboard, row % 2 ? materials.violet : materials.cyan, [1540, 3, 4], [0, 76, -175 + row * 105]);
+    }
+    kit.cable(parent, materials.black, [[-280, -340, 1000], [-260, -400, 760], [-520, -400, 300], [-700, -400, -550]], 10);
+}
+
+function createAccessories(kit: RoomKit, materials: RoomMaterials, parent: THREE.Group) {
+    const mouse = kit.group(parent, 'Mouse', [1040, -365, 1330]);
+    const body = kit.mesh(mouse, new THREE.SphereGeometry(1, 24, 16), materials.graphite);
+    body.scale.set(155, 85, 245);
+    kit.box(mouse, materials.black, [8, 10, 180], [0, 79, -65], 'ButtonSeparation');
+    kit.mesh(mouse, new THREE.CylinderGeometry(27, 27, 30, 16), materials.metal, [0, 83, -95], [0, 0, Math.PI / 2], 'ScrollWheel');
+    kit.box(mouse, materials.cyan, [35, 3, 9], [0, 65, 166], 'MouseIndicator', true);
+    kit.cable(parent, materials.black, [[1040, -370, 1090], [1030, -410, 900], [1200, -420, 700], [1380, -420, 420], [1500, -420, -600]], 8);
+
+    const headphones = kit.group(parent, 'Headphones', [-2240, -310, 1180]);
+    kit.mesh(headphones, new THREE.TorusGeometry(210, 25, 8, 28, Math.PI), materials.graphite);
+    for (const side of [-1, 1]) {
+        kit.mesh(headphones, new THREE.CylinderGeometry(85, 85, 60, 20), materials.black,
+            [side * 205, -45, 0], [0, 0, Math.PI / 2], 'EarCushion');
+        kit.mesh(headphones, new THREE.CylinderGeometry(91, 91, 25, 20), materials.metal,
+            [side * 245, -45, 0], [0, 0, Math.PI / 2], 'EarCup');
+    }
+
+    const mug = kit.group(parent, 'CoffeeMug', [1840, -430, 1450]);
+    const profile = [[0, 0], [88, 0], [98, 25], [105, 240], [91, 240], [84, 20], [0, 20]];
+    kit.mesh(mug, new THREE.LatheGeometry(profile.map(([x, y]) => new THREE.Vector2(x, y)), 32), materials.ceramic);
+    kit.mesh(mug, new THREE.CircleGeometry(90, 32), materials.coffee, [0, 211, 0], [-Math.PI / 2, 0, 0], 'Coffee');
+    kit.mesh(mug, new THREE.TorusGeometry(70, 18, 8, 24), materials.ceramic, [128, 135, 0], [0, 0, 0], 'MugHandle');
+
+    const lamp = kit.group(parent, 'DeskLamp', [-2780, -430, 360]);
+    kit.mesh(lamp, new THREE.CylinderGeometry(220, 240, 45, 28), materials.graphite, [0, 22, 0]);
+    kit.box(lamp, materials.metal, [45, 1330, 45], [0, 690, 0], 'LampStem', true);
+    kit.box(lamp, materials.metal, [390, 45, 45], [165, 1350, 0], 'LampArm', true);
+    kit.mesh(lamp, new THREE.CylinderGeometry(130, 245, 300, 28, 1, true), materials.graphite, [350, 1220, 0]);
+    kit.mesh(lamp, new THREE.CircleGeometry(220, 28), materials.warm, [350, 1073, 0], [Math.PI / 2, 0, 0], 'LampDiffuser');
+}
+
+function createChair(kit: RoomKit, materials: RoomMaterials, parent: THREE.Group) {
+    const chair = kit.group(parent, 'TaskChair', [120, 0, 3080]);
+    kit.box(chair, materials.fabric, [1140, 150, 950], [0, -1300, 0], 'Seat', true);
+    const back = kit.box(chair, materials.fabric, [1080, 1470, 150], [0, -450, 430], 'Backrest', true);
+    back.rotation.x = -0.12;
+    for (const x of [-590, 590]) {
+        kit.box(chair, materials.graphite, [70, 540, 100], [x, -1120, 120], 'ArmSupport', true);
+        kit.box(chair, materials.black, [150, 75, 660], [x, -835, 0], 'ArmRest', true);
+    }
+    kit.mesh(chair, new THREE.CylinderGeometry(62, 80, 1170, 16), materials.metal,
+        [0, -1970, 0], [0, 0, 0], 'GasLift');
+    for (let index = 0; index < 5; index++) {
+        const angle = index * Math.PI * 2 / 5;
+        const spoke = kit.box(chair, materials.graphite, [90, 70, 760],
+            [Math.sin(angle) * 350, -2550, Math.cos(angle) * 350], 'BaseSpoke', true);
+        spoke.rotation.y = angle;
+        kit.mesh(chair, new THREE.CylinderGeometry(65, 65, 75, 12), materials.black,
+            [Math.sin(angle) * 680, -2615, Math.cos(angle) * 680], [0, 0, Math.PI / 2], 'Caster');
+    }
+}
+
+export function createWorkstation(kit: RoomKit, materials: RoomMaterials) {
+    const root = new THREE.Group();
+    root.name = 'Workstation';
+    kit.box(root, materials.desk, [6600, 145, 2700], [0, -525, 650], 'Desktop', true);
+    for (const x of [-2920, 2920]) {
+        for (const z of [-450, 1700]) {
+            kit.box(root, materials.graphite, [140, 2050, 140], [x, -1660, z], 'DeskLeg', true);
+            kit.box(root, materials.black, [185, 60, 185], [x, -2665, z], 'LevellingFoot', true);
+        }
+        kit.box(root, materials.metal, [140, 110, 2300], [x, -650, 650], 'DeskFrame');
+    }
+    kit.box(root, materials.graphite, [5800, 160, 120], [0, -730, -450], 'CrossBrace');
+    kit.box(root, materials.black, [2640, 18, 1110], [-50, -442, 1260], 'DeskMat', true);
+    kit.box(root, materials.violet, [2500, 4, 7], [-50, -431, 1815], 'MatStitching');
+    kit.box(root, materials.black, [4200, 170, 250], [0, -730, -380], 'CableTray');
+    for (const x of [-1900, 1900]) {
+        kit.mesh(root, new THREE.CylinderGeometry(75, 75, 8, 20), materials.black, [x, -448, -400], [0, 0, 0], 'CableGrommet');
+    }
+    kit.box(root, materials.cyan, [5100, 8, 16], [0, -580, -707], 'RearDeskLight');
+    createKeyboard(kit, materials, root);
+    createAccessories(kit, materials, root);
+    createChair(kit, materials, root);
+    kit.cable(root, materials.black, [[2450, -410, -450], [2500, -850, -570], [2600, -1600, -570], [2600, -2620, -580], [4100, -2670, -3100]], 18);
+    kit.batchBoxes(root);
+    return root;
+}

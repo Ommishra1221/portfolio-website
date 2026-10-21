@@ -1,0 +1,51 @@
+import * as THREE from 'three';
+import RoomKit from './RoomKit';
+import { RoomMaterials } from './Materials';
+import { displayTexture } from './Displays';
+
+// This immutable contract mirrors MonitorScreen, which remains untouched.
+export const CENTER_SCREEN = {
+    width: 1280, height: 1024,
+    position: [0, 950, 255] as [number, number, number],
+    tilt: -3 * Math.PI / 180,
+};
+
+export function createMonitorArray(kit: RoomKit, materials: RoomMaterials) {
+    const root = new THREE.Group();
+    root.name = 'MonitorArray';
+    const center = kit.group(root, 'CenterMonitor', CENTER_SCREEN.position);
+    center.rotation.x = CENTER_SCREEN.tilt;
+    // Aperture is slightly larger than the full CSS rectangle, including its padding.
+    // Bezel starts outside +/-640 and +/-512; rear shell remains behind Z=0.
+    const width = CENTER_SCREEN.width;
+    const height = CENTER_SCREEN.height;
+    kit.box(center, materials.graphite, [width + 110, height + 110, 105], [0, 0, -70], 'BackPanel', true);
+    for (const side of [-1, 1]) {
+        kit.box(center, materials.black, [44, height + 100, 130], [side * (width / 2 + 30), 0, 18], 'SideBezel', true);
+        kit.box(center, materials.black, [width + 16, 44, 130], [0, side * (height / 2 + 30), 18], 'HorizontalBezel', true);
+    }
+    kit.box(center, materials.cyan, [20, 5, 5], [width / 2 - 45, -height / 2 - 26, 86], 'PowerIndicator');
+    const aperture = kit.group(center, 'InteractiveAperture');
+    aperture.userData = { width, height, padding: 32, compositorDepth: 96 };
+    kit.box(root, materials.metal, [170, 760, 160], [0, -40, 25], 'CenterStand', true);
+    kit.box(root, materials.graphite, [820, 50, 590], [0, -420, 140], 'CenterFoot', true);
+
+    for (const side of [-1, 1]) {
+        const monitor = kit.group(root, side < 0 ? 'LeftMonitor' : 'RightMonitor', [side * 1530, 950, 110]);
+        monitor.rotation.y = side * -0.15;
+        monitor.rotation.x = CENTER_SCREEN.tilt;
+        kit.box(monitor, materials.graphite, [1510, 970, 105], [0, 0, -65], 'RearShell', true);
+        kit.box(monitor, materials.black, [1500, 960, 50], [0, 0, 0], 'Bezel', true);
+        const screen = new THREE.MeshBasicMaterial({ map: displayTexture(kit, side < 0 ? 'terminal' : 'system'), toneMapped: false });
+        screen.name = 'OriginalDemoScreen';
+        kit.materials.add(screen);
+        const face = kit.mesh(monitor, new THREE.PlaneGeometry(1440, 900), screen, [0, 0, 30], [0, 0, 0], 'DemoDisplay');
+        face.castShadow = false;
+        kit.box(monitor, side < 0 ? materials.violet : materials.cyan, [22, 4, 5], [660, -463, 30], 'PowerIndicator');
+        kit.box(root, materials.metal, [120, 850, 130], [side * 1530, -20, -10], 'SideStand', true);
+        kit.box(root, materials.graphite, [700, 45, 480], [side * 1530, -420, 20], 'SideFoot', true);
+        kit.cable(root, materials.black, [[side * 1530, 700, -30], [side * 1530, 40, -140], [side * 1900, -370, -450]]);
+    }
+    kit.batchBoxes(root);
+    return root;
+}

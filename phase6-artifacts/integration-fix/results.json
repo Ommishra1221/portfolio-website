@@ -1,0 +1,26 @@
+{
+  "bridge": {
+    "exitCode": 0
+  },
+  "quality": {
+    "exitCode": 0
+  },
+  "intro": {
+    "exitCode": 0
+  },
+  "camera": {
+    "exitCode": 0
+  },
+  "hardware": {
+    "exitCode": 0
+  },
+  "ui": {
+    "exitCode": 0
+  },
+  "compositor": {
+    "exitCode": 0
+  },
+  "types": {
+    "exitCode": 0
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "rootStatus": 200,
+  "messages": [
+    {
+      "type": "liveReload"
+    },
+    {
+      "type": "reconnect",
+      "data": 10
+    },
+    {
+      "type": "overlay",
+      "data": true
+    },
+    {
+      "type": "hash",
+      "data": "f2cc4dcb03983495"
+    },
+    {
+      "type": "ok"
+    }
+  ],
+  "assets": [
+    {
+      "url": "http://localhost:8081/bundle.f856250507b94b92.js",
+      "status": 200,
+      "bytes": 173934
+    }
+  ],
+  "chunks": [
+    {
+      "files": [
+        "main.css",
+        "bundle.f856250507b94b92.js"
+      ],
+      "initial": true,
+      "entry": true
+    },
+    {
+      "files": [
+        "src_Application_Application_ts.css",
+        "bundle.68fb85fc3543d271.js"
+      ],
+      "initial": false,
+      "entry": false
+    },
+    {
+      "files": [
+        "bundle.b2705c10b14c8f5d.js"
+      ],
+      "initial": false,
+      "entry": false
+    }
+  ],
+  "errors": [],
+  "warnings": []
+}

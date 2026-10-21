@@ -1,0 +1,6 @@
+{
+  "file": "src/Application/World/MonitorScreen.ts",
+  "before": "monitor-before-fix.snapshot",
+  "oldBlock": "        const material = new THREE.MeshLambertMaterial();\r\n        material.side = THREE.DoubleSide;\r\n        material.opacity = 0;\r\n        material.transparent = true;\r\n        // NoBlending allows the GL plane to occlude the CSS plane\r\n        material.blending = THREE.NoBlending;",
+  "newBlock": "        // Punch an RGBA(0, 0, 0, 0) hole in the WebGL canvas for CSS3D.\r\n        // A lit white Lambert mask writes bright RGB at zero alpha with NoBlending.\r\n        const material = new THREE.MeshBasicMaterial({\r\n            color: 0x000000,\r\n            side: THREE.DoubleSide,\r\n            opacity: 0,\r\n            transparent: true,\r\n            blending: THREE.NoBlending,\r\n            premultipliedAlpha: true,\r\n            depthTest: true,\r\n            depthWrite: true,\r\n            toneMapped: false,\r\n            fog: false,\r\n        });"
+}

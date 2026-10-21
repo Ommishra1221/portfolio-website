@@ -1,0 +1,5 @@
+{
+  "status": "PASS",
+  "checks": 12,
+  "note": "Actual React/jsdom keyboard/mouse events; no browser hit-testing, focus styling or WebGL claim."
+}

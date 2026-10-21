@@ -1,0 +1,16 @@
+[
+  {
+    "url": "http://localhost:3000/",
+    "status": 200,
+    "xFrameOptions": null,
+    "csp": null,
+    "cspMeta": false
+  },
+  {
+    "url": "http://localhost:8080/?dev",
+    "status": 200,
+    "xFrameOptions": null,
+    "csp": null,
+    "cspMeta": false
+  }
+]

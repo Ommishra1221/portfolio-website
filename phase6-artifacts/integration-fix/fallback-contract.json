@@ -1,0 +1,4 @@
+{
+  "before": "            container.textContent =\r\n                'Portfolio desktop is not configured. Set window.portfolioRuntimeConfig.innerSiteUrl to the deployed HTTPS inner-site URL.';",
+  "after": "            container.style.fontFamily = 'system-ui, sans-serif';\n            container.style.fontSize = '28px';\n            container.style.lineHeight = '1.5';\n            container.style.textAlign = 'center';\n            container.style.whiteSpace = 'pre-line';\n            container.setAttribute('role', 'status');\n            container.textContent = 'Portfolio desktop is not configured yet.\\n\\nYou can still explore the room and use its controls.';\n            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {\n                container.textContent += '\\n\\nFor the local desktop, open this page with ?dev.';\n            }"
+}

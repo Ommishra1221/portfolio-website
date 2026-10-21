@@ -1,0 +1,2 @@
+*** You are running in headless mode.
+[Parent 25460, IPC I/O Parent] WARNING: Failed to launch tab subprocess @SB::LA::SpawnTarget (Error:0): file /builds/worker/checkouts/gecko/ipc/glue/GeckoChildProcessHost.cpp:804

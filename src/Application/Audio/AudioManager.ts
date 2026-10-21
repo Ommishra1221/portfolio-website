@@ -6,6 +6,9 @@ import UIEventBus from '../UI/EventBus';
 const POS_DEBUG = false;
 const DEFAULT_REF_DISTANCE = 10000;
 export default class Audio {
+    private disposed = false;
+    private subscriptions: Array<() => void> = [];
+    private nextAudio = 0;
     application: Application;
     listener: THREE.AudioListener;
     context: AudioContext;
@@ -30,19 +33,13 @@ export default class Audio {
             ambience: new AmbienceAudio(this),
         };
 
-        UIEventBus.on('loadingScreenDone', () => {
-            setTimeout(() => {
-                const AudioContext =
-                    // @ts-ignore
-                    window.AudioContext || window.webkitAudioContext;
-                this.context = new AudioContext();
-                this.context.resume();
-            }, 100);
-        });
-
-        UIEventBus.on('muteToggle', (mute: boolean) => {
+        this.context = this.listener.context;
+        this.subscriptions.push(UIEventBus.on('loadingScreenDone', () => {
+            if (!this.disposed) void this.context.resume().catch(() => {});
+        }));
+        this.subscriptions.push(UIEventBus.on('muteToggle', (mute: boolean) => {
             this.listener.setMasterVolume(mute ? 0 : 1);
-        });
+        }));
     }
 
     playAudio(
@@ -60,15 +57,17 @@ export default class Audio {
             pitch?: number;
         } = {}
     ) {
+        if (this.disposed) return '';
         // Resume context if it's suspended
-        if (this.context) this.context.resume();
+        if (this.context) void this.context.resume().catch(() => {});
 
         // Get the audio source
         sourceName = this.getRandomVariant(sourceName);
 
         // Setup
         const buffer = this.loadedAudio[sourceName];
-        const poolKey = sourceName + '_' + Object.keys(this.audioPool).length;
+        if (!buffer) return '';
+        const poolKey = sourceName + '_' + this.nextAudio++;
 
         let audio: THREE.Audio<any> | THREE.PositionalAudio = new THREE.Audio(
             this.listener
@@ -89,12 +88,12 @@ export default class Audio {
                   }
                 : {};
 
-            const sphere = new THREE.SphereGeometry(100, 8, 8);
-            const material = new THREE.MeshBasicMaterial({
+            const sphere = POS_DEBUG ? new THREE.SphereGeometry(100, 8, 8) : undefined;
+            const material = POS_DEBUG ? new THREE.MeshBasicMaterial({
                 color: 0xff0000,
                 ...extraMaterialOptions,
-            });
-            const mesh = new THREE.Mesh(sphere, material);
+            }) : undefined;
+            const mesh = POS_DEBUG ? new THREE.Mesh(sphere, material) : new THREE.Object3D();
 
             mesh.position.copy(options.position);
             mesh.name = poolKey;
@@ -138,6 +137,8 @@ export default class Audio {
         // Add to pool
         if (audio.source) {
             audio.source.onended = () => {
+                audio.isPlaying = false;
+                audio.disconnect();
                 delete this.audioPool[poolKey];
                 if (options.position) {
                     const positionalObject =
@@ -183,9 +184,26 @@ export default class Audio {
     }
 
     update() {
+        if (this.disposed) return;
         for (const key in this.audioSources) {
             const _key = key as keyof typeof this.audioSources;
             this.audioSources[_key].update();
         }
+    }
+    dispose() {
+        if (this.disposed) return;
+        this.disposed = true;
+        this.subscriptions.forEach(unsubscribe => unsubscribe()); this.subscriptions = [];
+        Object.values(this.audioSources).forEach(source => source.dispose());
+        Object.entries(this.audioPool).forEach(([key, audio]) => {
+            if (audio.source) audio.source.onended = null;
+            if (audio.isPlaying) audio.stop();
+            audio.disconnect();
+            this.scene.getObjectByName(key)?.removeFromParent();
+        });
+        this.audioPool = {};
+        this.loadedAudio = {};
+        this.listener.removeFromParent();
+        this.listener.gain.disconnect();
     }
 }

@@ -43,6 +43,22 @@ export default class Camera extends EventEmitter {
     currentKeyframe: CameraKey | undefined;
     targetKeyframe: CameraKey | undefined;
     keyframes: { [key in CameraKey]: CameraKeyframeInstance };
+    readonly reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+    introActive = false;
+    private started = false;
+    private disposed = false;
+    private pendingStart = false;
+    private ownedTweens: Array<{stop(): any; start(): any}> = [];
+    private completion?: () => void;
+    private subscriptions: Array<() => void> = [];
+    private onMouseDown = (event: MouseEvent) => {
+        if (this.freeCam || (event.target instanceof Element && event.target.closest('button, a, input, textarea, select, summary, [role="button"], .room-controls, .cinematic-controls'))) return;
+        if (this.introActive) { this.skipIntro(); return; }
+        if ((event.target as HTMLElement)?.id === 'prevent-click') return;
+        if (this.currentKeyframe === CameraKey.IDLE || this.targetKeyframe === CameraKey.IDLE) this.transition(CameraKey.DESK);
+        else if (this.currentKeyframe === CameraKey.DESK || this.targetKeyframe === CameraKey.DESK) this.transition(CameraKey.IDLE);
+    };
 
     constructor() {
         super();
@@ -66,23 +82,7 @@ export default class Camera extends EventEmitter {
             orbitControlsStart: new OrbitControlsStart(),
         };
 
-        document.addEventListener('mousedown', (event) => {
-            event.preventDefault();
-            // @ts-ignore
-            if (event.target.id === 'prevent-click') return;
-            // print target and current keyframe
-            if (
-                this.currentKeyframe === CameraKey.IDLE ||
-                this.targetKeyframe === CameraKey.IDLE
-            ) {
-                this.transition(CameraKey.DESK);
-            } else if (
-                this.currentKeyframe === CameraKey.DESK ||
-                this.targetKeyframe === CameraKey.DESK
-            ) {
-                this.transition(CameraKey.IDLE);
-            }
-        });
+        document.addEventListener('mousedown', this.onMouseDown);
 
         this.setPostLoadTransition();
         this.setInstance();
@@ -96,31 +96,97 @@ export default class Camera extends EventEmitter {
         easing?: any,
         callback?: () => void
     ) {
-        if (this.currentKeyframe === key) return;
-
-        if (this.targetKeyframe) TWEEN.removeAll();
-
+        if (this.disposed) return;
+        if (this.introActive && !this.introStep) this.endIntro();
+        if (this.targetKeyframe === key && !this.reducedMotion.matches) return;
+        this.cancelTransition();
+        const keyframe = this.keyframes[key];
+        keyframe.update();
+        if (this.reducedMotion.matches || duration <= 0 || this.currentKeyframe === key) {
+            this.settle(key);
+            callback?.();
+            return;
+        }
         this.currentKeyframe = undefined;
         this.targetKeyframe = key;
-
-        const keyframe = this.keyframes[key];
-
-        const posTween = new TWEEN.Tween(this.position)
-            .to(keyframe.position, duration)
-            .easing(easing || TWEEN.Easing.Quintic.InOut)
-            .onComplete(() => {
-                this.currentKeyframe = key;
-                this.targetKeyframe = undefined;
-                if (callback) callback();
-            });
-
-        const focTween = new TWEEN.Tween(this.focalPoint)
-            .to(keyframe.focalPoint, duration)
-            .easing(easing || TWEEN.Easing.Quintic.InOut);
-
-        posTween.start();
-        focTween.start();
+        this.completion = callback;
+        const finish = () => {
+            this.currentKeyframe = key;
+            this.targetKeyframe = undefined;
+            this.completion = undefined;
+            this.ownedTweens = [];
+            callback?.();
+        };
+        this.ownedTweens = [
+            new TWEEN.Tween(this.position).to(keyframe.position, duration).easing(easing || TWEEN.Easing.Quintic.InOut),
+            new TWEEN.Tween(this.focalPoint).to(keyframe.focalPoint, duration).easing(easing || TWEEN.Easing.Quintic.InOut).onComplete(finish),
+        ];
+        this.ownedTweens.forEach(tween => tween.start());
     }
+
+    private introStep = false;
+    private cancelTransition() {
+        this.ownedTweens.forEach(tween => tween.stop());
+        this.ownedTweens = [];
+        this.completion = undefined;
+        this.targetKeyframe = undefined;
+    }
+
+    private settle(key: CameraKey) {
+        this.cancelTransition();
+        this.keyframes[key].update();
+        this.currentKeyframe = key;
+        this.position.copy(this.keyframes[key].position);
+        this.focalPoint.copy(this.keyframes[key].focalPoint);
+        this.instance.position.copy(this.position);
+        this.instance.lookAt(this.focalPoint);
+    }
+
+    private endIntro() {
+        if (!this.introActive) return;
+        this.introActive = false;
+        UIEventBus.dispatch('cinematicState', {active: false});
+    }
+
+    skipIntro() {
+        if (!this.introActive || this.disposed) return;
+        this.endIntro();
+        this.settle(CameraKey.IDLE);
+    }
+
+    private startExperience = () => {
+        if (this.started || this.disposed) return;
+        if (this.resources.loaded !== undefined && this.resources.loaded < this.resources.toLoad) {
+            this.pendingStart = true;
+            return;
+        }
+        this.started = true;
+        this.pendingStart = false;
+        if (this.reducedMotion.matches || this.sizes.width < 768) {
+            this.settle(CameraKey.IDLE);
+            return;
+        }
+        this.introActive = true;
+        UIEventBus.dispatch('cinematicState', {active: true});
+        try {
+            this.introStep = true;
+            this.transition(CameraKey.DESK, 3000, TWEEN.Easing.Quintic.InOut, () => {
+                if (!this.introActive || this.disposed) return;
+                try {
+                    this.introStep = true;
+                    this.transition(CameraKey.IDLE, 1800, TWEEN.Easing.Cubic.InOut, () => this.endIntro());
+                } catch (error) {
+                    console.error('Cinematic settle failed; returning to room.', error);
+                    this.endIntro();
+                    this.settle(CameraKey.IDLE);
+                } finally { this.introStep = false; }
+            });
+        } catch (error) {
+            console.error('Cinematic entrance failed; returning to room.', error);
+            this.endIntro();
+            this.settle(CameraKey.IDLE);
+        } finally { this.introStep = false; }
+    };
 
     setInstance() {
         this.instance = new THREE.PerspectiveCamera(
@@ -136,6 +202,8 @@ export default class Camera extends EventEmitter {
 
     setMonitorListeners() {
         this.on('enterMonitor', () => {
+            // Orbit mode owns the camera until its explicit exit; ignore queued iframe hover.
+            if (this.freeCam || this.targetKeyframe === CameraKey.ORBIT_CONTROLS_START) return;
             this.transition(
                 CameraKey.MONITOR,
                 2000,
@@ -144,14 +212,18 @@ export default class Camera extends EventEmitter {
             UIEventBus.dispatch('enterMonitor', {});
         });
         this.on('leftMonitor', () => {
+            if (this.freeCam || this.targetKeyframe === CameraKey.ORBIT_CONTROLS_START) return;
             this.transition(CameraKey.DESK);
             UIEventBus.dispatch('leftMonitor', {});
         });
     }
 
     setFreeCamListeners() {
-        UIEventBus.on('freeCamToggle', (toggle: boolean) => {
-            // if (toggle === this.freeCam) return;
+        this.subscriptions.push(UIEventBus.on('freeCamToggle', (toggle: boolean) => {
+            if (this.disposed) return;
+            this.endIntro();
+            if (toggle && this.freeCam) return;
+            this.freeCam = false;
             if (toggle) {
                 this.transition(
                     CameraKey.ORBIT_CONTROLS_START,
@@ -167,7 +239,7 @@ export default class Camera extends EventEmitter {
                     }
                 );
                 // @ts-ignore
-                document.getElementById('webgl').style.pointerEvents = 'auto';
+                document.getElementById('webgl')!.style.pointerEvents = 'auto';
             } else {
                 this.freeCam = false;
                 this.transition(
@@ -178,16 +250,32 @@ export default class Camera extends EventEmitter {
                 // @ts-ignore
                 document.getElementById('webgl').style.pointerEvents = 'none';
             }
-        });
+        }));
     }
 
     setPostLoadTransition() {
-        UIEventBus.on('loadingScreenDone', () => {
-            this.transition(CameraKey.IDLE, 2500, TWEEN.Easing.Exponential.Out);
-        });
+        this.subscriptions.push(UIEventBus.on('loadingScreenDone', this.startExperience));
+        this.subscriptions.push(UIEventBus.on('skipCinematic', () => this.skipIntro()));
+        this.subscriptions.push(UIEventBus.on('enterPortfolio', () => {
+            if (this.started && !this.disposed) this.trigger('enterMonitor');
+        }));
+        this.subscriptions.push(UIEventBus.on('returnToRoom', () => {
+            if (!this.started || this.disposed) return;
+            if (this.freeCam || this.targetKeyframe === CameraKey.ORBIT_CONTROLS_START) {
+                UIEventBus.dispatch('freeCamToggle', false);
+                UIEventBus.dispatch('freeCamReset', {});
+            } else this.trigger('leftMonitor');
+        }));
+        this.resources.on('ready.cinematic', () => { if (this.pendingStart) this.startExperience(); });
     }
 
     resize() {
+        if (this.introActive) this.skipIntro();
+        else if (this.targetKeyframe) {
+            const key = this.targetKeyframe, callback = this.completion;
+            this.settle(key);
+            callback?.();
+        }
         this.instance.aspect = this.sizes.width / this.sizes.height;
         this.instance.updateProjectionMatrix();
     }
@@ -216,18 +304,31 @@ export default class Camera extends EventEmitter {
     }
 
     update() {
+        if (this.disposed) return;
+        if (this.introActive && (this.reducedMotion.matches || this.sizes.width < 768)) this.skipIntro();
+        if (this.reducedMotion.matches && this.targetKeyframe) {
+            const key = this.targetKeyframe, callback = this.completion;
+            this.settle(key);
+            callback?.();
+        }
+        for (const key in this.keyframes) {
+            // Keep the reveal stable, but follow the idle target during settling.
+            // Updating before Tween.js prevents a moving-keyframe snap at completion.
+            if (this.introActive && this.targetKeyframe !== CameraKey.IDLE) continue;
+            const _key = key as CameraKey;
+            if (this.reducedMotion.matches && (_key === CameraKey.IDLE || _key === CameraKey.DESK)) continue;
+            this.keyframes[_key].update();
+        }
+
         TWEEN.update();
+
+        if (this.orbitControls) this.orbitControls.enableDamping = !this.reducedMotion.matches;
 
         if (this.freeCam && this.orbitControls) {
             this.position.copy(this.orbitControls.object.position);
             this.focalPoint.copy(this.orbitControls.target);
             this.orbitControls.update();
             return;
-        }
-
-        for (const key in this.keyframes) {
-            const _key = key as CameraKey;
-            this.keyframes[_key].update();
         }
 
         if (this.currentKeyframe) {
@@ -238,5 +339,18 @@ export default class Camera extends EventEmitter {
 
         this.instance.position.copy(this.position);
         this.instance.lookAt(this.focalPoint);
+    }
+    dispose() {
+        if (this.disposed) return;
+        this.disposed = true;
+        this.endIntro();
+        this.cancelTransition();
+        document.removeEventListener('mousedown', this.onMouseDown);
+        this.subscriptions.forEach(unsubscribe => unsubscribe());
+        this.subscriptions = [];
+        this.resources.off('ready.cinematic');
+        this.off('enterMonitor');
+        this.off('leftMonitor');
+        this.orbitControls?.dispose();
     }
 }

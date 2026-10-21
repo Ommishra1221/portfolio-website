@@ -1,0 +1,33 @@
+{
+  "changed": [
+    "src/Application/Application.ts",
+    "src/Application/Audio/AudioManager.ts",
+    "src/Application/Audio/AudioSources.ts",
+    "src/Application/Camera/Camera.ts",
+    "src/Application/Camera/CameraKeyframes.ts",
+    "src/Application/Renderer.ts",
+    "src/Application/UI/App.tsx",
+    "src/Application/UI/components/FreeCamToggle.tsx",
+    "src/Application/UI/components/InfoOverlay.tsx",
+    "src/Application/UI/components/InterfaceUI.tsx",
+    "src/Application/UI/components/LoadingScreen.tsx",
+    "src/Application/UI/index.ts",
+    "src/Application/UI/style.css",
+    "src/Application/Utils/Resources.ts",
+    "src/Application/Utils/Sizes.ts",
+    "src/Application/Utils/Time.ts",
+    "src/Application/World/Cyberpunk/CyberpunkRoom.ts",
+    "src/Application/World/Cyberpunk/HardwareInteraction.ts",
+    "src/Application/World/World.ts",
+    "src/index.html",
+    "src/script.ts",
+    "src/style.css",
+    "src/tsconfig.json"
+  ],
+  "created": [
+    "src/Application/UI/components/ExperienceSettings.tsx",
+    "src/Application/UI/PortfolioEntry.ts",
+    "src/Application/Utils/Dispose.ts",
+    "src/Application/Utils/GraphicsQuality.ts"
+  ]
+}

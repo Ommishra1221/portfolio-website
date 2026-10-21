@@ -1,0 +1,72 @@
+import * as THREE from 'three';
+import RoomKit from './RoomKit';
+
+/** Original static illustrations, deliberately not personal projects or live telemetry. */
+export function displayTexture(kit: RoomKit, mode: 'terminal' | 'system') {
+    const fallback = () => {
+        const texture = new THREE.DataTexture(new Uint8Array([8, 11, 20, 255]), 1, 1);
+        texture.needsUpdate = true;
+        return kit.texture(texture);
+    };
+    if (typeof document === 'undefined') return fallback();
+    const canvas = document.createElement('canvas');
+    canvas.width = 768;
+    canvas.height = 480;
+    const context = canvas.getContext('2d');
+    if (!context) {
+        console.warn('[CyberpunkRoom] Decorative display unavailable; portfolio monitor is preserved.');
+        return fallback();
+    }
+    context.fillStyle = '#080b14';
+    context.fillRect(0, 0, 768, 480);
+    context.fillStyle = '#101827';
+    context.fillRect(0, 0, 768, 54);
+    context.font = '19px monospace';
+    context.fillStyle = '#8b9bb2';
+    context.fillText(mode === 'terminal' ? 'WORKSPACE / TERMINAL' : 'SYSTEM / DISPLAY STUDY', 28, 34);
+    context.fillStyle = '#00e5ff';
+    context.fillRect(26, 72, 3, 320);
+    context.font = '18px monospace';
+    if (mode === 'terminal') {
+        const lines = [
+            '$ preview --local', '',
+            'function frame(time) {',
+            '  const view = scene.update(time);',
+            '  renderer.draw(view);',
+            '}', '',
+            '> awaiting input_',
+        ];
+        lines.forEach((line, index) => {
+            context.fillStyle = index === 0 || index === 7 ? '#00e5ff' : '#b5c3d8';
+            context.fillText(line, 52, 105 + index * 36);
+        });
+    } else {
+        for (let column = 0; column < 3; column++) {
+            const x = 52 + column * 226;
+            context.fillStyle = '#1b2436';
+            context.fillRect(x, 92, 200, 92);
+            context.fillStyle = '#b5c3d8';
+            context.fillText(['DISPLAY', 'INPUT', 'LOCAL'][column], x + 16, 126);
+            context.fillStyle = '#8b5cf6';
+            context.fillText('CONCEPT', x + 16, 158);
+        }
+        context.strokeStyle = '#00a8bd';
+        context.lineWidth = 2;
+        context.beginPath();
+        for (let index = 0; index < 64; index++) {
+            const x = 52 + index * 10;
+            const y = 282 + Math.sin(index * 0.22) * 26 + Math.sin(index * 0.49) * 13;
+            if (index) context.lineTo(x, y); else context.moveTo(x, y);
+        }
+        context.stroke();
+        context.fillStyle = '#8b9bb2';
+        context.fillText('Illustrative signal / no live metrics', 52, 360);
+    }
+    context.font = '15px monospace';
+    context.fillStyle = '#65758e';
+    context.fillText('STATIC DEMO  /  ORIGINAL DISPLAY ART', 28, 447);
+    const texture = kit.texture(new THREE.CanvasTexture(canvas));
+    texture.encoding = THREE.sRGBEncoding;
+    texture.anisotropy = 2;
+    return texture;
+}

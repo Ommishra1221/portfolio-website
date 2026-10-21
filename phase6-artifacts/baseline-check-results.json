@@ -1,0 +1,44 @@
+{
+  "lifecycle": {
+    "exitCode": 0
+  },
+  "intro": {
+    "exitCode": 0
+  },
+  "ui": {
+    "exitCode": 0
+  },
+  "room": {
+    "exitCode": 0
+  },
+  "hardware": {
+    "exitCode": 0
+  },
+  "aperture": {
+    "exitCode": 0
+  },
+  "compositor": {
+    "exitCode": 0
+  },
+  "cameraWorld": {
+    "exitCode": 0
+  },
+  "bridge": {
+    "exitCode": 0
+  },
+  "navigation": {
+    "exitCode": 0
+  },
+  "windows": {
+    "exitCode": 0
+  },
+  "applicationTypes": {
+    "exitCode": 0
+  },
+  "fullTypes": {
+    "exitCode": 2
+  },
+  "diff": {
+    "exitCode": 0
+  }
+}

@@ -4,8 +4,11 @@ import Application from '../Application';
 import UIEventBus from '../UI/EventBus';
 import EventEmitter from './EventEmitter';
 import Loading from './Loading';
+import { disposeOnce, disposeScene, DisposedResources } from './Dispose';
 
 export default class Resources extends EventEmitter {
+    private disposed = false;
+    private released: DisposedResources = new WeakSet();
     sources: Resource[];
     // Not sure about this one
     items: {
@@ -50,30 +53,35 @@ export default class Resources extends EventEmitter {
     }
 
     startLoading() {
+        const failed = () => { if (!this.disposed) UIEventBus.dispatch('resourceLoadError', {}); };
         // Load each source
         for (const source of this.sources) {
             if (source.type === 'gltfModel') {
                 this.loaders.gltfLoader.load(source.path, (file) => {
                     this.sourceLoaded(source, file);
-                });
+                }, undefined, failed);
             } else if (source.type === 'texture') {
                 this.loaders.textureLoader.load(source.path, (file) => {
                     file.encoding = THREE.sRGBEncoding;
                     this.sourceLoaded(source, file);
-                });
+                }, undefined, failed);
             } else if (source.type === 'cubeTexture') {
                 this.loaders.cubeTextureLoader.load(source.path, (file) => {
                     this.sourceLoaded(source, file);
-                });
+                }, undefined, failed);
             } else if (source.type === 'audio') {
                 this.loaders.audioLoader.load(source.path, (buffer) => {
                     this.sourceLoaded(source, buffer);
-                });
+                }, undefined, failed);
             }
         }
     }
 
     sourceLoaded(source: Resource, file: LoadedResource) {
+        if (this.disposed) {
+            this.release(file, this.released);
+            return;
+        }
         this.items[source.type][source.name] = file;
 
         this.loaded++;
@@ -87,5 +95,18 @@ export default class Resources extends EventEmitter {
         if (this.loaded === this.toLoad) {
             this.trigger('ready');
         }
+    }
+    private release(file: LoadedResource, seen: DisposedResources) {
+        if (file instanceof THREE.Texture) disposeOnce(file, seen);
+        const scene = (file as LoadedModel).scene;
+        if (scene instanceof THREE.Object3D) disposeScene(scene, seen);
+    }
+    dispose(seen: DisposedResources = new WeakSet()) {
+        if (this.disposed) return;
+        this.disposed = true;
+        this.released = seen;
+        this.off('ready');
+        Object.values(this.items).forEach(items => Object.values(items).forEach(file => this.release(file, seen)));
+        this.items = {texture: {}, cubeTexture: {}, gltfModel: {}, audio: {}};
     }
 }

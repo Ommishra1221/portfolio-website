@@ -5,6 +5,12 @@ import { Vector3 } from 'three';
 
 export class AudioSource {
     manager: AudioManager;
+    protected cleanup: Array<() => void> = [];
+    protected listen(type: string, listener: (event: any) => void) {
+        document.addEventListener(type, listener);
+        this.cleanup.push(() => document.removeEventListener(type, listener));
+    }
+    dispose() { this.cleanup.forEach(clean => clean()); this.cleanup = []; }
 
     constructor(manager: AudioManager) {
         this.manager = manager;
@@ -18,7 +24,7 @@ export class ComputerAudio extends AudioSource {
     constructor(manager: AudioManager) {
         super(manager);
 
-        document.addEventListener('mousedown', (event) => {
+        this.listen('mousedown', (event) => {
             // @ts-ignore
             if (event.inComputer) {
                 this.manager.playAudio('mouseDown', {
@@ -28,7 +34,7 @@ export class ComputerAudio extends AudioSource {
             }
         });
 
-        document.addEventListener('mouseup', (event) => {
+        this.listen('mouseup', (event) => {
             // @ts-ignore
             if (event.inComputer) {
                 this.manager.playAudio('mouseUp', {
@@ -38,14 +44,15 @@ export class ComputerAudio extends AudioSource {
             }
         });
 
-        document.addEventListener('keyup', (event) => {
+        this.listen('keyup', (event) => {
             // @ts-ignore
             if (event.inComputer) {
                 this.lastKey = '';
             }
         });
 
-        document.addEventListener('keydown', (event) => {
+        this.listen('keydown', (event) => {
+            if (typeof event.key !== 'string' || (!event.inComputer && !event.key.startsWith('_AUTO_'))) return;
             if (event.key.includes('_AUTO_')) {
                 this.manager.playAudio('ccType', {
                     volume: 0.1,
@@ -73,7 +80,7 @@ export class AmbienceAudio extends AudioSource {
 
     constructor(manager: AudioManager) {
         super(manager);
-        UIEventBus.on('loadingScreenDone', () => {
+        this.cleanup.push(UIEventBus.on('loadingScreenDone', () => {
             this.poolKey = this.manager.playAudio('office', {
                 volume: 1,
                 loop: true,
@@ -87,7 +94,7 @@ export class AmbienceAudio extends AudioSource {
                 volume: 0.4,
                 randDetuneScale: 0,
             });
-        });
+        }));
     }
 
     mapValues(

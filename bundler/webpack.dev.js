@@ -2,7 +2,6 @@ const path = require('path')
 const { merge } = require('webpack-merge')
 const commonConfiguration = require('./webpack.common.js')
 const ip = require('ip')
-const portFinderSync = require('portfinder-sync')
 
 const infoColor = (_message) =>
 {
@@ -21,7 +20,8 @@ module.exports = merge(
         devServer:
         {
             host: 'local-ip',
-            port: portFinderSync.getPort(8080),
+            // Fail clearly if an old server owns the advertised development URL.
+            port: 8080,
             open: true,
             https: false,
             allowedHosts: 'all',

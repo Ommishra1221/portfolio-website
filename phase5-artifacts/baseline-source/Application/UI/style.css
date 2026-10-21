@@ -1,0 +1,214 @@
+h1,
+h2,
+h3,
+h4,
+h5,
+p {
+    /* font-family: ocr-a-std, monospace; */
+    font-family: monospace;
+    font-weight: 400;
+    font-style: normal;
+    color: var(--portfolio-text, #d5deeb);
+    /* mobile friendly font size */
+    font-size: 16px;
+}
+
+/* if on mobile */
+@media only screen and (max-width: 768px) {
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    p {
+        font-size: 10px;
+    }
+}
+
+br {
+    padding-top: 8px;
+    padding-bottom: 8px;
+    height: 16px;
+}
+
+.loading::after {
+    display: inline-block;
+    animation: dotty steps(1, end) 1s infinite;
+    content: '';
+}
+
+@keyframes dotty {
+    0% {
+        content: '   ';
+    }
+    25% {
+        content: '. ';
+    }
+    50% {
+        content: '.. ';
+    }
+    75% {
+        content: '...';
+    }
+    100% {
+        content: '   ';
+    }
+}
+.blinking-cursor {
+    background-color: #fff;
+    width: 0.8em;
+    height: 0.15em;
+    -webkit-animation: 0.65s blink step-end infinite;
+    -moz-animation: 0.65s blink step-end infinite;
+    -ms-animation: 0.65s blink step-end infinite;
+    -o-animation: 0.65s blink step-end infinite;
+    animation: 0.65s blink step-end infinite;
+}
+
+@keyframes blink {
+    from,
+    to {
+        background-color: transparent;
+    }
+    50% {
+        background-color: white;
+    }
+}
+
+@-moz-keyframes blink {
+    from,
+    to {
+        background-color: transparent;
+    }
+    50% {
+        background-color: white;
+    }
+}
+
+@-webkit-keyframes blink {
+    from,
+    to {
+        background-color: transparent;
+    }
+    50% {
+        background-color: white;
+    }
+}
+
+@-ms-keyframes blink {
+    from,
+    to {
+        background-color: transparent;
+    }
+    50% {
+        background-color: white;
+    }
+}
+
+@-o-keyframes blink {
+    from,
+    to {
+        background-color: transparent;
+    }
+    50% {
+        background-color: white;
+    }
+}
+
+.bios-start-button {
+    background-color: var(--portfolio-panel, #0d1220);
+    border: 1px solid var(--portfolio-cyan, #00e5ff);
+    box-shadow: 0 0 18px rgba(0, 229, 255, 0.14);
+}
+
+.bios-start-button p {
+    box-sizing: border-box;
+    padding: 8px;
+}
+
+.bios-start-button:hover p {
+    background-color: var(--portfolio-cyan, #00e5ff);
+    cursor: pointer;
+    color: var(--portfolio-bg, #080b14);
+}
+
+.loading-screen-header {
+    padding: 48px;
+}
+
+.loading-screen-body {
+    padding-left: 48px;
+    padding-right: 48px;
+}
+
+.loading-screen-footer {
+    padding: 48px;
+    padding-bottom: 64px;
+}
+
+.info-wrapper {
+    top: 64px;
+    left: 64px;
+}
+
+/* if on mobile make all loading screen elements have a padding of 16 */
+@media only screen and (max-width: 768px) {
+    .loading-screen-header {
+        padding: 16px;
+    }
+
+    .info-wrapper {
+        top: 16px;
+        left: 16px;
+    }
+
+    .blinking-cursor {
+        background-color: #fff;
+        width: 0.4em;
+        height: 0.08em;
+        -webkit-animation: 0.65s blink step-end infinite;
+        -moz-animation: 0.65s blink step-end infinite;
+        -ms-animation: 0.65s blink step-end infinite;
+        -o-animation: 0.65s blink step-end infinite;
+        animation: 0.65s blink step-end infinite;
+    }
+    
+    .loading-screen-body {
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+
+    .loading-screen-footer {
+        padding: 16px;
+        padding-bottom: 32px;
+    }
+}
+.room-controls {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    z-index: 20;
+    width: min(280px, calc(100vw - 40px));
+    box-sizing: border-box;
+    padding: 10px 14px;
+    border: 1px solid #344458;
+    background: #0d1220;
+    color: var(--portfolio-text, #d5deeb);
+    pointer-events: auto;
+    font: 13px monospace;
+}
+.room-controls summary { cursor: pointer; padding: 4px; }
+.room-controls [role="group"] { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+.room-controls button {
+    padding: 10px;
+    background: #182333;
+    color: #d5deeb;
+    border: 1px solid #46586f;
+    text-align: left;
+    cursor: pointer;
+    font: inherit;
+}
+.room-controls button[aria-pressed="true"] { border-color: #00a0b3; }
+.room-controls summary:focus-visible,
+.room-controls button:focus-visible { outline: 2px solid #00e5ff; outline-offset: 3px; }
+.room-controls p { font-size: 11px; line-height: 1.5; }

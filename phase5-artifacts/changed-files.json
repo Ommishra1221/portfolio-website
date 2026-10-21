@@ -1,0 +1,16 @@
+{
+  "changed": [
+    "src/Application/Application.ts",
+    "src/Application/Camera/Camera.ts",
+    "src/Application/UI/App.tsx",
+    "src/Application/UI/components/HelpPrompt.tsx",
+    "src/Application/UI/components/LoadingScreen.tsx",
+    "src/Application/UI/EventBus.ts",
+    "src/Application/UI/style.css",
+    "src/Application/Utils/Resources.ts",
+    "src/Application/World/Cyberpunk/CyberpunkRoom.ts"
+  ],
+  "created": [
+    "src/Application/UI/components/CinematicControls.tsx"
+  ]
+}

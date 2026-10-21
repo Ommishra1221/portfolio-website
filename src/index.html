@@ -4,9 +4,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- webpackIgnore: true -->
+  <link rel="icon" href="/favicon.ico" type="image/x-icon" />
   <style>
     body {
-      background-color: rgb(0, 0, 0);
+      background-color: var(--portfolio-bg, #080B14);
       margin: 0;
     }
 
@@ -67,17 +69,17 @@
   </style>
 
   <!-- Primary Meta Tags -->
-  <title>Henry Heffernan - Portfolio 2022</title>
-  <meta name="title" content="Henry Heffernan - Software Engineer">
-  <meta name="description"
-    content="I'm Henry, a Software Engineer based in NY. Rensselaer Polytechnic Institute Graduate with my B.S. in Computer Science, currently looking for a full time role.">
+  <title>Software Engineer Portfolio | Interactive Workstation</title>
+  <meta name="title" content="Software Engineer Portfolio">
+  <meta name="description" content="An interactive portfolio for a software engineer.">
+  <script>
+    window.portfolioRuntimeConfig = window.portfolioRuntimeConfig || { innerSiteUrl: null };
+  </script>
 
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://henryheffernan.com/">
-  <meta property="og:title" content="Henry Heffernan - Software Engineer">
-  <meta property="og:description"
-    content="I'm Henry, a Software Engineer based in NY. Rensselaer Polytechnic Institute Graduate with my B.S. in Computer Science, currently looking for a full time role.">
+  <meta property="og:title" content="Software Engineer Portfolio">
+  <meta property="og:description" content="An interactive portfolio for a software engineer.">
 
   <!-- Twitter -->
 
@@ -85,35 +87,11 @@
   <meta property="twitter:card" content="summary_large_image">
   <meta name="twitter:card" content="summary_large_image">
 
-  <meta property="twitter:url" content="https://henryheffernan.com/">
-  <meta name="twitter:url" content="https://henryheffernan.com/">
+  <meta property="twitter:title" content="Software Engineer Portfolio">
+  <meta name="twitter:title" content="Software Engineer Portfolio">
+  <meta property="twitter:description" content="An interactive portfolio for a software engineer.">
+  <meta name="twitter:description" content="An interactive portfolio for a software engineer.">
 
-  <meta property="twitter:title" content="Henry Heffernan - Software Engineer">
-  <meta name="twitter:title" content="Henry Heffernan - Software Engineer">
-
-  <meta property="twitter:description"
-    content="I'm Henry, a Software Engineer based in NY. Rensselaer Polytechnic Institute Graduate with my B.S. in Computer Science, currently looking for a full time role.">
-  <meta name="twitter:description"
-    content="I'm Henry, a Software Engineer based in NY. Rensselaer Polytechnic Institute Graduate with my B.S. in Computer Science, currently looking for a full time role.">
-
-  <meta property="twitter:image" content="https://henryheffernan.com/images/preview-new.jpg">
-  <meta name="twitter:image" content="https://henryheffernan.com/images/preview-new.jpg">
-
-  <!-- Images -->
-  <meta property="og:image" content="https://henryheffernan.com/images/preview-new.jpg">
-  <meta property="og:image:secure" content="https://henryheffernan.com/images/preview-new.jpg">
-
-  <link rel="shortcut icon" href="../static/images/favicon.ico" type="image/x-icon">
-
-  <!-- Global site tag (gtag.js) - Google Analytics -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-4FJBF6WF60"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag() { dataLayer.push(arguments); }
-    gtag('js', new Date());
-
-    gtag('config', 'G-4FJBF6WF60');
-  </script>
 </head>
 
 <body>
@@ -123,9 +101,9 @@
   <div id="ui-interactive"></div>
   <div id="ui"></div>
   <div id="monitor-videos">
-    <video id="video-1" muted loop autoplay width="0" height="0" src="../static/textures/monitor/video/base-static.mp4"
+    <video id="video-1" muted loop preload="none" width="0" height="0" src="../static/textures/monitor/video/base-static.mp4"
       style="opacity: 0;"></video>
-    <video id="video-2" muted loop autoplay width="0" height="0"
+    <video id="video-2" muted loop preload="none" width="0" height="0"
       src="../static/textures/monitor/video/static-texture-layer.mp4" style="opacity: 0;"></video>
   </div>
 </body>

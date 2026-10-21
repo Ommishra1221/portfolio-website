@@ -1,0 +1,46 @@
+import * as THREE from 'three';
+import RoomKit from './RoomKit';
+import { createMaterials } from './Materials';
+import { createArchitecture } from './Architecture';
+import { createWorkstation } from './Workstation';
+import { createMonitorArray } from './MonitorArray';
+import { createPCTower } from './PCTower';
+import { createLighting } from './Lighting';
+
+/** Original room; all animation is driven by World through the existing frame loop. */
+export default class CyberpunkRoom extends THREE.Group {
+    readonly kit = new RoomKit();
+    readonly rotors: THREE.Group[];
+    private disposed = false;
+
+    constructor() {
+        super();
+        this.name = 'CyberpunkRoom';
+        const materials = createMaterials(this.kit);
+        this.add(createArchitecture(this.kit, materials));
+        this.add(createWorkstation(this.kit, materials));
+        this.add(createMonitorArray(this.kit, materials));
+        const pc = createPCTower(this.kit, materials);
+        this.rotors = pc.rotors;
+        this.add(pc.root, createLighting());
+        this.userData.provenance = 'Original procedural geometry and locally generated textures; inherited center compositor is separate.';
+    }
+
+    update(deltaMilliseconds: number, reducedMotion = false) {
+        if (this.disposed || reducedMotion || !Number.isFinite(deltaMilliseconds)) return;
+        const angle = Math.min(Math.max(deltaMilliseconds, 0), 50) * 0.0012;
+        this.rotors.forEach(rotor => { rotor.rotation.z = (rotor.rotation.z + angle) % (Math.PI * 2); });
+    }
+
+    dispose() {
+        if (this.disposed) return;
+        this.disposed = true;
+        this.traverse(object => {
+            if (object instanceof THREE.InstancedMesh) object.dispose();
+            if (object instanceof THREE.SpotLight) object.shadow.map?.dispose();
+        });
+        this.kit.dispose();
+        this.removeFromParent();
+        this.clear();
+    }
+}

@@ -1,0 +1,88 @@
+{
+  "status": "PASS",
+  "checks": 12,
+  "framing": {
+    "idle": {
+      "deskLeftFront": {
+        "x": -0.07363898492594864,
+        "y": -0.1228960394945116,
+        "inside": true
+      },
+      "deskRightFront": {
+        "x": 0.2601039583392265,
+        "y": 0.08831232056077537,
+        "inside": true
+      },
+      "pcOuterFront": {
+        "x": 0.22792254743083964,
+        "y": 0.2596741725445687,
+        "inside": true
+      },
+      "monitorTopLeft": {
+        "x": -0.021708350727479,
+        "y": 0.21256356920315755,
+        "inside": true
+      },
+      "monitorBottomRight": {
+        "x": 0.04667408855491357,
+        "y": 0.1457018138189967,
+        "inside": true
+      }
+    },
+    "deskResponsive": {
+      "deskLeftFront": {
+        "x": -1.7368689303834663,
+        "y": -1.0349175348667021,
+        "inside": false
+      },
+      "deskRightFront": {
+        "x": 1.7368689303834663,
+        "y": -1.0349175348667021,
+        "inside": false
+      },
+      "pcOuterFront": {
+        "x": 1.6120448457627143,
+        "y": 0.2776913566298113,
+        "inside": false
+      },
+      "monitorTopLeft": {
+        "x": -0.25656243088267194,
+        "y": 0.5125237967074391,
+        "inside": true
+      },
+      "monitorBottomRight": {
+        "x": 0.24877520846961856,
+        "y": -0.06806887479610678,
+        "inside": true
+      }
+    },
+    "focusResponsive": {
+      "deskLeftFront": {
+        "x": -31.149591808924455,
+        "y": -19.0295688141793,
+        "inside": false
+      },
+      "deskRightFront": {
+        "x": 31.149591808924455,
+        "y": -19.0295688141793,
+        "inside": false
+      },
+      "pcOuterFront": {
+        "x": 7.953234672592769,
+        "y": 0.8729160006504257,
+        "inside": false
+      },
+      "monitorTopLeft": {
+        "x": -0.7029958914668439,
+        "y": 0.8087413939544575,
+        "inside": true
+      },
+      "monitorBottomRight": {
+        "x": 0.7223011688241787,
+        "y": -0.8309505947622616,
+        "inside": true
+      }
+    }
+  },
+  "note": "Actual material/matrix/projection tests and installed shader inspection. No GPU pixels, screenshot, physical hit-test, or Chrome visual acceptance claim. Desk projection may crop workstation edges under unchanged camera definitions."
+}

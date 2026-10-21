@@ -40,6 +40,14 @@ const MuteToggle: React.FC<MuteToggleProps> = ({}) => {
             onMouseUp={onMouseUpHandler}
             className="icon-control-container"
             id="prevent-click"
+            role="button"
+            tabIndex={0}
+            aria-label={muted ? 'Unmute audio' : 'Mute audio'}
+            aria-pressed={muted}
+            onKeyDown={(event) => {
+                if (!event.repeat && (event.key === 'Enter' || event.key === ' ')) onMouseDownHandler(event);
+            }}
+            onKeyUp={onMouseUpHandler}
         >
             <motion.img
                 id="prevent-click"

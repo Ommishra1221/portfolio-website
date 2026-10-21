@@ -1,0 +1,56 @@
+import * as THREE from 'three';
+import RoomKit from './RoomKit';
+
+export function createMaterials(kit: RoomKit) {
+    // Deterministic original grain, generated locally; no inherited bitmap asset.
+    const pixels = new Uint8Array(128 * 128 * 4);
+    let seed = 137;
+    for (let y = 0; y < 128; y++) {
+        for (let x = 0; x < 128; x++) {
+            seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+            const grain = 192 + (seed % 24) + Math.round(Math.sin(y * 1.8 + x * 0.025) * 12);
+            const index = (y * 128 + x) * 4;
+            pixels.set([grain, grain, grain, 255], index);
+        }
+    }
+    const grain = kit.texture(new THREE.DataTexture(pixels, 128, 128, THREE.RGBAFormat));
+    grain.wrapS = grain.wrapT = THREE.RepeatWrapping;
+    grain.repeat.set(3, 8);
+    grain.encoding = THREE.sRGBEncoding;
+    grain.needsUpdate = true;
+    // Roughness is data, so it must not use the color map's sRGB decoding.
+    const roughness = kit.texture(grain.clone());
+    roughness.encoding = THREE.LinearEncoding;
+    roughness.needsUpdate = true;
+    const mineralPixels = new Uint8Array(64 * 64 * 4);
+    for (let index = 0; index < 64 * 64; index++) {
+        seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+        const value = 192 + (seed % 48);
+        mineralPixels.set([value, value, value, 255], index * 4);
+    }
+    const mineral = kit.texture(new THREE.DataTexture(mineralPixels, 64, 64, THREE.RGBAFormat));
+    mineral.wrapS = mineral.wrapT = THREE.RepeatWrapping;
+    mineral.repeat.set(6, 6);
+    mineral.needsUpdate = true;
+
+    const materials = {
+        wall: kit.material({ color: '#182236', roughness: 0.98, roughnessMap: mineral }),
+        floor: kit.material({ color: '#25262c', roughness: 0.88, roughnessMap: mineral }),
+        graphite: kit.material({ color: '#182333', roughness: 0.62, metalness: 0.18 }),
+        metal: kit.material({ color: '#718092', roughness: 0.34, metalness: 0.65, roughnessMap: roughness }),
+        black: kit.material({ color: '#0c111b', roughness: 0.72 }),
+        desk: kit.material({ color: '#493f35', roughness: 0.68, map: grain, roughnessMap: roughness, metalness: 0.03 }),
+        fabric: kit.material({ color: '#18212a', roughness: 1, roughnessMap: mineral, bumpMap: mineral, bumpScale: 0.6 }),
+        keys: kit.material({ color: '#3c485a', roughness: 0.56 }),
+        ceramic: kit.material({ color: '#505a63', roughness: 0.3, metalness: 0.05 }),
+        coffee: kit.material({ color: '#20150e', roughness: 0.24 }),
+        cyan: kit.material({ color: '#0b5662', emissive: '#00e5ff', emissiveIntensity: 0.65, roughness: 0.4 }),
+        violet: kit.material({ color: '#32234f', emissive: '#8b5cf6', emissiveIntensity: 0.6, roughness: 0.45 }),
+        magenta: kit.material({ color: '#36142b', emissive: '#ff2d95', emissiveIntensity: 0.2 }),
+        warm: kit.material({ color: '#e4b68c', emissive: '#ffca8b', emissiveIntensity: 0.85 }),
+    };
+    Object.entries(materials).forEach(([name, material]) => { material.name = name; });
+    return materials;
+}
+
+export type RoomMaterials = ReturnType<typeof createMaterials>;

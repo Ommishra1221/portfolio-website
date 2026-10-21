@@ -1,0 +1,29 @@
+[
+  {
+    "type": "liveReload"
+  },
+  {
+    "type": "reconnect",
+    "data": 10
+  },
+  {
+    "type": "overlay",
+    "data": true
+  },
+  {
+    "type": "hash",
+    "data": "34b30c7264b9b510"
+  },
+  {
+    "type": "errors",
+    "data": [
+      {
+        "file": "C:\\Users\\User\\Downloads\\Om_Portfolio\\portfolio-website\\src\\script.ts",
+        "moduleIdentifier": "C:\\Users\\User\\Downloads\\Om_Portfolio\\portfolio-website\\node_modules\\ts-loader\\index.js!C:\\Users\\User\\Downloads\\Om_Portfolio\\portfolio-website\\src\\script.ts",
+        "moduleName": "./src/script.ts",
+        "loc": "10:47-82",
+        "message": "\u001b[90m[tsl] \u001b[39m\u001b[1m\u001b[31mERROR\u001b[39m\u001b[22m\u001b[1m\u001b[31m in \u001b[39m\u001b[22m\u001b[1m\u001b[36mC:\\Users\\User\\Downloads\\Om_Portfolio\\portfolio-website\\src\\script.ts(10,48)\u001b[39m\u001b[22m\r\n\u001b[1m\u001b[31m      TS1323: Dynamic imports are only supported when the '--module' flag is set to 'es2020', 'es2022', 'esnext', 'commonjs', 'amd', 'system', 'umd', 'node16', or 'nodenext'.\u001b[39m\u001b[22m"
+      }
+    ]
+  }
+]

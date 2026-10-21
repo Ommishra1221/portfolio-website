@@ -1,0 +1,62 @@
+{
+  "quality": {
+    "exitCode": 0
+  },
+  "lifecycle": {
+    "exitCode": 0
+  },
+  "ownership": {
+    "exitCode": 0
+  },
+  "applicationDisposal": {
+    "exitCode": 0
+  },
+  "responsive": {
+    "exitCode": 0
+  },
+  "typeScope": {
+    "exitCode": 0
+  },
+  "intro": {
+    "exitCode": 0
+  },
+  "ui": {
+    "exitCode": 0
+  },
+  "room": {
+    "exitCode": 0
+  },
+  "hardware": {
+    "exitCode": 0
+  },
+  "aperture": {
+    "exitCode": 0
+  },
+  "compositor": {
+    "exitCode": 0
+  },
+  "cameraWorld": {
+    "exitCode": 0
+  },
+  "loadingFans": {
+    "exitCode": 0
+  },
+  "bridge": {
+    "exitCode": 0
+  },
+  "navigation": {
+    "exitCode": 0
+  },
+  "windows": {
+    "exitCode": 0
+  },
+  "applicationTypes": {
+    "exitCode": 0
+  },
+  "fullTypes": {
+    "exitCode": 0
+  },
+  "diff": {
+    "exitCode": 0
+  }
+}

@@ -1,21 +1,38 @@
 import React, { useEffect, useRef, useState } from 'react';
 import FreeCamToggle from './FreeCamToggle';
 import MuteToggle from './MuteToggle';
+import portfolioIdentity from '../portfolioIdentity';
+import { dispatchSyntheticMonitorKey } from '../../Utils/MonitorSyntheticEvents';
 
 interface InfoOverlayProps {
     visible: boolean;
 }
 
-const NAME_TEXT = 'Henry Heffernan';
-const TITLE_TEXT = 'Software Engineer';
+const NAME_TEXT = portfolioIdentity.displayName;
+const TITLE_TEXT = portfolioIdentity.roleTitle;
 const MULTIPLIER = 1;
 
 const InfoOverlay: React.FC<InfoOverlayProps> = ({ visible }) => {
     const visRef = useRef(visible);
+    const mounted = useRef(true);
+    const timers = useRef<Array<ReturnType<typeof setTimeout>>>([]);
+    const later = (callback: () => void, delay: number) => timers.current.push(setTimeout(() => { if (mounted.current) callback(); }, delay));
+    useEffect(() => () => { mounted.current = false; timers.current.forEach(clearTimeout); }, []);
     const [nameText, setNameText] = useState('');
     const [titleText, setTitleText] = useState('');
     const [time, setTime] = useState(new Date().toLocaleTimeString());
     const timeRef = useRef(time);
+    useEffect(() => {
+        const media = window.matchMedia('(prefers-reduced-motion: reduce)');
+        const changed = () => {
+            if (!media.matches) return;
+            timers.current.forEach(clearTimeout);
+            setNameText(NAME_TEXT); setTitleText(TITLE_TEXT); setTimeText(timeRef.current);
+            setTextDone(true); setVolumeVisible(true); setFreeCamVisible(true);
+        };
+        media.addEventListener?.('change', changed);
+        return () => media.removeEventListener?.('change', changed);
+    }, []);
     const [timeText, setTimeText] = useState('');
     const [textDone, setTextDone] = useState(false);
     const [volumeVisible, setVolumeVisible] = useState(false);
@@ -33,12 +50,10 @@ const InfoOverlay: React.FC<InfoOverlayProps> = ({ visible }) => {
             text = refOverride.current;
         }
         if (i < text.length) {
-            setTimeout(() => {
-                if (visRef.current === true)
-                    window.postMessage(
-                        { type: 'keydown', key: `_AUTO_${text[i]}` },
-                        '*'
-                    );
+            later(() => {
+                if (visRef.current === true) {
+                    dispatchSyntheticMonitorKey(`_AUTO_${text[i]}`);
+                }
 
                 setText(curText + text[i]);
                 typeText(
@@ -56,8 +71,12 @@ const InfoOverlay: React.FC<InfoOverlayProps> = ({ visible }) => {
     };
 
     useEffect(() => {
-        if (visible && nameText == '') {
-            setTimeout(() => {
+        if (visible && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            timers.current.forEach(clearTimeout);
+            setNameText(NAME_TEXT); setTitleText(TITLE_TEXT); setTimeText(timeRef.current);
+            setTextDone(true); setVolumeVisible(true); setFreeCamVisible(true);
+        } else if (visible && nameText == '') {
+            later(() => {
                 typeText(0, '', NAME_TEXT, setNameText, () => {
                     typeText(0, '', TITLE_TEXT, setTitleText, () => {
                         typeText(
@@ -79,9 +98,9 @@ const InfoOverlay: React.FC<InfoOverlayProps> = ({ visible }) => {
 
     useEffect(() => {
         if (textDone) {
-            setTimeout(() => {
+            later(() => {
                 setVolumeVisible(true);
-                setTimeout(() => {
+                later(() => {
                     setFreeCamVisible(true);
                 }, 250);
             }, 250);
@@ -89,15 +108,17 @@ const InfoOverlay: React.FC<InfoOverlayProps> = ({ visible }) => {
     }, [textDone]);
 
     useEffect(() => {
-        window.postMessage({ type: 'keydown', key: `_AUTO_` }, '*');
+        dispatchSyntheticMonitorKey('_AUTO_');
     }, [freeCamVisible, volumeVisible]);
 
     useEffect(() => {
+        if (!visible) return;
+        setTime(new Date().toLocaleTimeString());
         const interval = setInterval(() => {
             setTime(new Date().toLocaleTimeString());
         }, 1000);
         return () => clearInterval(interval);
-    }, []);
+    }, [visible]);
 
     useEffect(() => {
         timeRef.current = time;
@@ -145,7 +166,8 @@ const InfoOverlay: React.FC<InfoOverlayProps> = ({ visible }) => {
 
 const styles: StyleSheetCSS = {
     container: {
-        background: 'black',
+        background: 'var(--portfolio-panel)',
+        borderLeft: '2px solid var(--portfolio-cyan)',
         padding: 4,
         paddingLeft: 16,
         paddingRight: 16,

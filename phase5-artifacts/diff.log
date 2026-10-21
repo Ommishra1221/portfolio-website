@@ -1,0 +1,8 @@
+warning: in the working copy of 'src/Application/Application.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/Application/Camera/Camera.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/Application/UI/App.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/Application/UI/EventBus.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/Application/UI/components/HelpPrompt.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/Application/UI/components/LoadingScreen.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/Application/UI/style.css', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/Application/Utils/Resources.ts', LF will be replaced by CRLF the next time Git touches it

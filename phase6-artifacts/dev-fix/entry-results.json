@@ -1,0 +1,5 @@
+{
+  "status": "PASS",
+  "checks": 9,
+  "note": "Actual entry code executed with DOM and Application constructor fixture; not WebGL/browser visual acceptance."
+}

@@ -1,0 +1,5 @@
+{
+  "status": "PASS",
+  "checks": 30,
+  "note": "Actual Three.js ray tests and React/jsdom/user-event keyboard simulation. Not browser pixels or physical hardware input."
+}

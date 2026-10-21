@@ -1,0 +1,12 @@
+{
+  "triangles": 52146,
+  "meshSubmissions": 85,
+  "instances": 340,
+  "instanceBatches": 39,
+  "materials": 17,
+  "geometries": 48,
+  "textures": 5,
+  "transparentMeshes": 1,
+  "lights": 5,
+  "shadowLights": 1
+}

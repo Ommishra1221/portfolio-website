@@ -1,9 +1,15 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState, useRef } from 'react';
 import eventBus from '../EventBus';
+import portfolioIdentity from '../portfolioIdentity';
 
 type LoadingProps = {};
 
 const LoadingScreen: React.FC<LoadingProps> = () => {
+    const started = useRef(false);
+    const timers = useRef<Array<ReturnType<typeof setTimeout>>>([]);
+    const later = (callback: () => void, delay: number) => timers.current.push(setTimeout(callback, delay));
+    useEffect(() => () => timers.current.forEach(clearTimeout), []);
+    const [loadError, setLoadError] = useState(false);
     const [progress, setProgress] = useState(0);
     const [toLoad, setToLoad] = useState(0);
     const [loaded, setLoaded] = useState(0);
@@ -29,12 +35,16 @@ const LoadingScreen: React.FC<LoadingProps> = () => {
         }
     };
 
-    window.addEventListener('resize', onResize);
+    useEffect(() => {
+        window.addEventListener('resize', onResize);
+        const unsubscribe = eventBus.on('resourceLoadError', () => setLoadError(true));
+        return () => { window.removeEventListener('resize', onResize); unsubscribe(); };
+    }, []);
 
     useEffect(() => {
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.has('debug')) {
-            start();
+            // Debug also waits for resources; it must not bypass scene readiness.
         } else if (!detectWebGLContext()) {
             setWebGLError(true);
         } else {
@@ -43,7 +53,7 @@ const LoadingScreen: React.FC<LoadingProps> = () => {
     }, []);
 
     useEffect(() => {
-        eventBus.on('loadedSource', (data) => {
+        return eventBus.on('loadedSource', (data) => {
             setProgress(data.progress);
             setToLoad(data.toLoad);
             setLoaded(data.loaded);
@@ -67,9 +77,9 @@ const LoadingScreen: React.FC<LoadingProps> = () => {
         if (progress >= 1 && !webGLError) {
             setDoneLoading(true);
 
-            setTimeout(() => {
+            later(() => {
                 setLoadingTextOpacity(0);
-                setTimeout(() => {
+                later(() => {
                     setStartPopupOpacity(1);
                 }, 500);
             }, 1000);
@@ -78,20 +88,22 @@ const LoadingScreen: React.FC<LoadingProps> = () => {
 
     useEffect(() => {
         if (webGLError) {
-            setTimeout(() => {
+            later(() => {
                 setWebGLErrorOpacity(1);
             }, 500);
         }
     }, [webGLError]);
 
     const start = useCallback(() => {
+        if (started.current || progress < 1 || webGLError || loadError) return;
+        started.current = true;
         setLoadingOverlayOpacity(0);
         eventBus.dispatch('loadingScreenDone', {});
         const ui = document.getElementById('ui');
         if (ui) {
             ui.style.pointerEvents = 'none';
         }
-    }, []);
+    }, [progress, webGLError, loadError]);
 
     const getSpace = (sourceName: string) => {
         let spaces = '';
@@ -126,7 +138,9 @@ const LoadingScreen: React.FC<LoadingProps> = () => {
 
     return (
         <div
+            aria-hidden={overlayOpacity === 0}
             style={Object.assign({}, styles.overlay, {
+                visibility: overlayOpacity === 0 ? 'hidden' : 'visible',
                 opacity: overlayOpacity,
                 transform: `scale(${overlayOpacity === 0 ? 1.1 : 1})`,
             })}
@@ -136,7 +150,8 @@ const LoadingScreen: React.FC<LoadingProps> = () => {
                     <span className="blinking-cursor" />
                 </div>
             )}
-            {!webGLError && (
+            {loadError && <div role="alert" className="scene-load-error">Room resources could not load. Check your connection and <button type="button" onClick={() => window.location.reload()}>Reload</button>.</div>}
+            {!webGLError && !loadError && (
                 <div
                     style={Object.assign({}, styles.overlayText, {
                         opacity: loadingTextOpacity,
@@ -149,24 +164,21 @@ const LoadingScreen: React.FC<LoadingProps> = () => {
                         <div style={styles.logoContainer}>
                             <div>
                                 <p style={styles.green}>
-                                    <b>Heffernan,</b>{' '}
-                                </p>
-                                <p style={styles.green}>
-                                    <b>Henry Inc.</b>
+                                    <b>{portfolioIdentity.brandTitle}</b>
                                 </p>
                             </div>
                         </div>
                         <div style={styles.headerInfo}>
-                            <p>Released: 01/13/2000</p>
-                            <p>HHBIOS (C)2000 Heffernan Henry Inc.,</p>
+                            <p>PORTFOLIO SYSTEM // BUILD 01</p>
+                            <p>INTERACTIVE WORKSTATION</p>
                         </div>
                     </div>
                     <div style={styles.body} className="loading-screen-body">
-                        <p>HSP S13 2000-2022 Special UC131S</p>
+                        <p>SOFTWARE ENGINEERING // WORKSTATION INTERFACE</p>
                         <div style={styles.spacer} />
                         {showBiosInfo && (
                             <>
-                                <p>HSP Showcase(tm) XX 113</p>
+                                <p>INITIALIZING INTERACTIVE PORTFOLIO</p>
                                 <p>Checking RAM : {14000} OK</p>
                                 <div style={styles.spacer} />
                                 <div style={styles.spacer} />
@@ -195,7 +207,7 @@ const LoadingScreen: React.FC<LoadingProps> = () => {
                             <p>
                                 All Content Loaded, launching{' '}
                                 <b style={styles.green}>
-                                    'Henry Heffernan Portfolio Showcase'
+                                    {portfolioIdentity.launchTitle}
                                 </b>{' '}
                                 V1.0
                             </p>
@@ -227,7 +239,9 @@ const LoadingScreen: React.FC<LoadingProps> = () => {
                     <p>But do enjoy what I have done so far :)</p>
                     <div style={styles.spacer} />
                     <div style={styles.spacer} /> */}
-                    <p>Henry Heffernan Portfolio Showcase 2022</p>
+                    <p>
+                        {portfolioIdentity.displayName} | {portfolioIdentity.roleTitle}
+                    </p>
                     {mobileWarning && (
                         <>
                             <br />
@@ -254,7 +268,16 @@ const LoadingScreen: React.FC<LoadingProps> = () => {
                             marginTop: '16px',
                         }}
                     >
-                        <div className="bios-start-button" onClick={start}>
+                        <div className="bios-start-button" onClick={start}
+                            role="button"
+                            tabIndex={startPopupOpacity === 1 && overlayOpacity > 0 ? 0 : -1}
+                            aria-disabled={startPopupOpacity !== 1 || loadError}
+                            onKeyDown={(event) => {
+                                if (startPopupOpacity === 1 && !event.repeat && (event.key === 'Enter' || event.key === ' ')) {
+                                    event.preventDefault();
+                                    start();
+                                }
+                            }}>
                             <p>START</p>
                         </div>
                     </div>
@@ -288,7 +311,7 @@ const LoadingScreen: React.FC<LoadingProps> = () => {
 
 const styles: StyleSheetCSS = {
     overlay: {
-        backgroundColor: 'black',
+        backgroundColor: 'var(--portfolio-bg)',
         width: '100%',
         height: '100%',
         display: 'flex',
@@ -306,7 +329,7 @@ const styles: StyleSheetCSS = {
 
         boxSizing: 'border-box',
         fontSize: 16,
-        letterSpacing: 0.8,
+        letterSpacing: 0,
     },
 
     spacer: {
@@ -329,7 +352,7 @@ const styles: StyleSheetCSS = {
         alignItems: 'center',
     },
     warning: {
-        color: 'yellow',
+        color: 'var(--portfolio-magenta)',
     },
     blinkingContainer: {
         position: 'absolute',
@@ -342,9 +365,10 @@ const styles: StyleSheetCSS = {
         padding: 48,
     },
     startPopup: {
-        backgroundColor: '#000',
+        backgroundColor: 'var(--portfolio-panel)',
         padding: 24,
-        border: '7px solid #fff',
+        border: '1px solid var(--portfolio-cyan)',
+        boxShadow: '0 0 32px rgba(0, 229, 255, 0.16)',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
@@ -355,11 +379,11 @@ const styles: StyleSheetCSS = {
         marginLeft: 64,
     },
     red: {
-        color: '#00ff00',
+        color: 'var(--portfolio-violet)',
     },
     link: {
         // textDecoration: 'none',
-        color: '#4598ff',
+        color: 'var(--portfolio-cyan)',
         cursor: 'pointer',
     },
     overlayText: {

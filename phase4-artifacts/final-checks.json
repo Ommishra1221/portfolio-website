@@ -1,0 +1,38 @@
+{
+  "scene": {
+    "exitCode": 0
+  },
+  "interaction": {
+    "exitCode": 0
+  },
+  "aperture": {
+    "exitCode": 0
+  },
+  "compositor": {
+    "exitCode": 0
+  },
+  "camera": {
+    "exitCode": 0
+  },
+  "ui": {
+    "exitCode": 0
+  },
+  "bridge": {
+    "exitCode": 0
+  },
+  "navigation": {
+    "exitCode": 0
+  },
+  "windows": {
+    "exitCode": 0
+  },
+  "applicationTypes": {
+    "exitCode": 0
+  },
+  "fullTypes": {
+    "exitCode": 2
+  },
+  "diff": {
+    "exitCode": 0
+  }
+}

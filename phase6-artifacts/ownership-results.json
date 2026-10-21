@@ -1,0 +1,5 @@
+{
+  "status": "PASS",
+  "checks": 10,
+  "note": "Audio graph fixtures and real Three.js static/animated transform comparisons; no browser audio or GPU claim."
+}

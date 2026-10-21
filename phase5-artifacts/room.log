@@ -1,0 +1,35 @@
+{
+  "status": "PASS",
+  "checks": 184,
+  "baseline": {
+    "triangles": 52146,
+    "meshSubmissions": 85,
+    "instances": 340,
+    "instanceBatches": 39,
+    "materials": 17,
+    "geometries": 48,
+    "textures": 5,
+    "transparentMeshes": 1,
+    "lights": 5,
+    "shadowLights": 1
+  },
+  "current": {
+    "triangles": 42156,
+    "meshSubmissions": 97,
+    "instances": 581,
+    "instanceBatches": 60,
+    "materials": 23,
+    "geometries": 49,
+    "textures": 5,
+    "transparentMeshes": 1,
+    "lights": 5,
+    "shadowLights": 1
+  },
+  "ownedResources": 77,
+  "cpuUpdateSample": {
+    "iterations": 20000,
+    "totalMilliseconds": 48.0901,
+    "microsecondsPerUpdate": 2.404505,
+    "note": "Node CPU-only steady-state room.update microbenchmark after warmup; excludes rendering, raycasts, DOM, shadows and browser frame scheduling. Not FPS or GPU time."
+  }
+}

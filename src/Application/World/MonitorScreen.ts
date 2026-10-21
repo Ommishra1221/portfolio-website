@@ -7,13 +7,80 @@ import Resources from '../Utils/Resources';
 import Sizes from '../Utils/Sizes';
 import Camera from '../Camera/Camera';
 import EventEmitter from '../Utils/EventEmitter';
+import { CENTER_SCREEN, resolveInnerSiteUrl } from './MonitorConfig';
 
-const SCREEN_SIZE = { w: 1280, h: 1024 };
-const IFRAME_PADDING = 32;
+const SCREEN_SIZE = { w: CENTER_SCREEN.width, h: CENTER_SCREEN.height };
+const IFRAME_PADDING = CENTER_SCREEN.padding;
 const IFRAME_SIZE = {
-    w: SCREEN_SIZE.w - IFRAME_PADDING,
-    h: SCREEN_SIZE.h - IFRAME_PADDING,
+    w: SCREEN_SIZE.w - IFRAME_PADDING * 2,
+    h: SCREEN_SIZE.h - IFRAME_PADDING * 2,
 };
+
+type MonitorMessage =
+    | { type: 'mousemove'; clientX: number; clientY: number; viewportWidth: number; viewportHeight: number }
+    | { type: 'ready' | 'mousedown' | 'mouseup' }
+    | { type: 'keydown' | 'keyup'; key: string };
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+    return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function hasExactKeys(value: Record<string, unknown>, keys: string[]) {
+    const actualKeys = Object.keys(value).sort();
+    const expectedKeys = [...keys].sort();
+    return (
+        actualKeys.length === expectedKeys.length &&
+        actualKeys.every((key, index) => key === expectedKeys[index])
+    );
+}
+
+function isMonitorMessage(value: unknown): value is MonitorMessage {
+    if (!isRecord(value) || typeof value.type !== 'string') return false;
+
+    if (value.type === 'mousemove') {
+        return (
+            hasExactKeys(value, [
+                'type',
+                'clientX',
+                'clientY',
+                'viewportWidth',
+                'viewportHeight',
+            ]) &&
+            typeof value.clientX === 'number' &&
+            Number.isFinite(value.clientX) &&
+            typeof value.clientY === 'number' &&
+            Number.isFinite(value.clientY) &&
+            typeof value.viewportWidth === 'number' &&
+            Number.isFinite(value.viewportWidth) &&
+            value.viewportWidth > 0 &&
+            value.viewportWidth <= 16384 &&
+            typeof value.viewportHeight === 'number' &&
+            Number.isFinite(value.viewportHeight) &&
+            value.viewportHeight > 0 &&
+            value.viewportHeight <= 16384 &&
+            value.clientX >= 0 &&
+            value.clientX <= value.viewportWidth &&
+            value.clientY >= 0 &&
+            value.clientY <= value.viewportHeight
+        );
+    }
+
+    if (value.type === 'ready' || value.type === 'mousedown' || value.type === 'mouseup') {
+        return hasExactKeys(value, ['type']);
+    }
+
+    if (value.type === 'keydown' || value.type === 'keyup') {
+        return (
+            hasExactKeys(value, ['type', 'key']) &&
+            typeof value.key === 'string' &&
+            value.key.length > 0 &&
+            value.key.length <= 64 &&
+            !/[\u0000-\u001f\u007f]/.test(value.key)
+        );
+    }
+
+    return false;
+}
 
 export default class MonitorScreen extends EventEmitter {
     application: Application;
@@ -33,6 +100,11 @@ export default class MonitorScreen extends EventEmitter {
     mouseClickInProgress: boolean;
     dimmingPlane: THREE.Mesh;
     videoTextures: { [key in string]: THREE.VideoTexture };
+    iframe: HTMLIFrameElement | null;
+    messageHandler: ((event: MessageEvent) => void) | null;
+
+    screenListeners: Array<[string, EventListener]> = [];
+    loadTimeout: number | null = null;
 
     constructor() {
         super();
@@ -43,9 +115,11 @@ export default class MonitorScreen extends EventEmitter {
         this.resources = this.application.resources;
         this.screenSize = new THREE.Vector2(SCREEN_SIZE.w, SCREEN_SIZE.h);
         this.camera = this.application.camera;
-        this.position = new THREE.Vector3(0, 950, 255);
-        this.rotation = new THREE.Euler(-3 * THREE.MathUtils.DEG2RAD, 0, 0);
+        this.position = new THREE.Vector3(...CENTER_SCREEN.position);
+        this.rotation = new THREE.Euler(CENTER_SCREEN.tilt, 0, 0);
         this.videoTextures = {};
+        this.iframe = null;
+        this.messageHandler = null;
         this.mouseClickInProgress = false;
         this.shouldLeaveMonitor = false;
 
@@ -57,12 +131,17 @@ export default class MonitorScreen extends EventEmitter {
         this.createPerspectiveDimmer(maxOffset);
     }
 
+    addScreenListener(type: string, listener: EventListener, capture: boolean) {
+        this.screenListeners.push([type, listener]);
+        document.addEventListener(type, listener, capture);
+    }
+
     initializeScreenEvents() {
-        document.addEventListener(
+        this.addScreenListener(
             'mousemove',
             (event) => {
                 // @ts-ignore
-                const id = event.target.id;
+                const id = (event.target as HTMLElement | null)?.id;
                 if (id === 'computer-screen') {
                     // @ts-ignore
                     event.inComputer = true;
@@ -99,7 +178,7 @@ export default class MonitorScreen extends EventEmitter {
             },
             false
         );
-        document.addEventListener(
+        this.addScreenListener(
             'mousedown',
             (event) => {
                 // @ts-ignore
@@ -111,7 +190,7 @@ export default class MonitorScreen extends EventEmitter {
             },
             false
         );
-        document.addEventListener(
+        this.addScreenListener(
             'mouseup',
             (event) => {
                 // @ts-ignore
@@ -141,61 +220,31 @@ export default class MonitorScreen extends EventEmitter {
         container.style.opacity = '1';
         container.style.background = '#1d2e2f';
 
-        // Create iframe
-        const iframe = document.createElement('iframe');
-
-        // Bubble mouse move events to the main application, so we can affect the camera
-        iframe.onload = () => {
-            if (iframe.contentWindow) {
-                window.addEventListener('message', (event) => {
-                    var evt = new CustomEvent(event.data.type, {
-                        bubbles: true,
-                        cancelable: false,
-                    });
-
-                    // @ts-ignore
-                    evt.inComputer = true;
-                    if (event.data.type === 'mousemove') {
-                        var clRect = iframe.getBoundingClientRect();
-                        const { top, left, width, height } = clRect;
-                        const widthRatio = width / IFRAME_SIZE.w;
-                        const heightRatio = height / IFRAME_SIZE.h;
-
-                        // @ts-ignore
-                        evt.clientX = Math.round(
-                            event.data.clientX * widthRatio + left
-                        );
-                        //@ts-ignore
-                        evt.clientY = Math.round(
-                            event.data.clientY * heightRatio + top
-                        );
-                    } else if (event.data.type === 'keydown') {
-                        // @ts-ignore
-                        evt.key = event.data.key;
-                    } else if (event.data.type === 'keyup') {
-                        // @ts-ignore
-                        evt.key = event.data.key;
-                    }
-
-                    iframe.dispatchEvent(evt);
-                });
+        const iframeUrl = resolveInnerSiteUrl(window.location.search);
+        if (!iframeUrl) {
+            container.style.display = 'flex';
+            container.style.alignItems = 'center';
+            container.style.justifyContent = 'center';
+            container.style.padding = '64px';
+            container.style.boxSizing = 'border-box';
+            container.style.color = '#d8e2f0';
+            container.style.background = '#080b14';
+            container.style.fontFamily = 'system-ui, sans-serif';
+            container.style.fontSize = '28px';
+            container.style.lineHeight = '1.5';
+            container.style.textAlign = 'center';
+            container.style.whiteSpace = 'pre-line';
+            container.setAttribute('role', 'status');
+            container.textContent = 'Portfolio desktop is not configured yet.\n\nYou can still explore the room and use its controls.';
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                container.textContent += '\n\nFor the local desktop, open this page with ?dev.';
             }
-        };
-
-        // Set iframe attributes
-        // PROD
-        iframe.src = 'https://os.henryheffernan.com/';
-        /**
-         * Use dev server is query params are present
-         *
-         * Warning: This will not work unless the dev server is running on localhost:3000
-         * Also running the dev server causes browsers to freak out over unsecure connections
-         * in the iframe, so it will flag a ton of issues.
-         */
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.has('dev')) {
-            iframe.src = 'http://localhost:3000/';
+            this.createCssPlane(container);
+            return;
         }
+
+        const iframe = document.createElement('iframe');
+        const expectedOrigin = new URL(iframeUrl).origin;
         iframe.style.width = this.screenSize.width + 'px';
         iframe.style.height = this.screenSize.height + 'px';
         iframe.style.padding = IFRAME_PADDING + 'px';
@@ -204,13 +253,76 @@ export default class MonitorScreen extends EventEmitter {
         iframe.className = 'jitter';
         iframe.id = 'computer-screen';
         iframe.frameBorder = '0';
-        iframe.title = 'HeffernanOS';
+        iframe.title = 'Portfolio workstation desktop';
+        this.iframe = iframe;
 
-        // Add iframe to container
-        container.appendChild(iframe);
+        container.style.position = 'relative';
+        const status = document.createElement('div');
+        Object.assign(status.style, {
+            position: 'absolute', inset: '32px', padding: '48px',
+            background: '#080b14', color: '#d8e2f0', boxSizing: 'border-box',
+        });
+        status.setAttribute('role', 'status');
+        status.textContent = 'Connecting to portfolio desktop...';
+        container.append(iframe, status);
+        this.loadTimeout = window.setTimeout(() => {
+            status.hidden = false;
+            status.textContent = 'Portfolio desktop did not connect. Check the inner-site server, URL, and allowed parent origin, then reload.';
+        }, 20000);
+
+        this.messageHandler = (event: MessageEvent) => {
+            if (!this.iframe?.contentWindow || event.source !== this.iframe.contentWindow) return;
+
+            if (event.origin !== expectedOrigin || !isMonitorMessage(event.data)) return;
+
+            const message = event.data;
+            if (this.loadTimeout !== null) window.clearTimeout(this.loadTimeout);
+            this.loadTimeout = null;
+            status.hidden = true;
+            if (message.type === 'ready') return;
+            const bridgedEvent = new CustomEvent(message.type, {
+                bubbles: true,
+                cancelable: false,
+            });
+            Object.assign(bridgedEvent, { inComputer: true });
+
+            if (message.type === 'mousemove') {
+                const rect = this.iframe.getBoundingClientRect();
+                const contentWidth = rect.width * (IFRAME_SIZE.w / SCREEN_SIZE.w);
+                const contentHeight = rect.height * (IFRAME_SIZE.h / SCREEN_SIZE.h);
+                Object.assign(bridgedEvent, {
+                    clientX:
+                        rect.left +
+                        rect.width * (IFRAME_PADDING / SCREEN_SIZE.w) +
+                        (message.clientX / message.viewportWidth) * contentWidth,
+                    clientY:
+                        rect.top +
+                        rect.height * (IFRAME_PADDING / SCREEN_SIZE.h) +
+                        (message.clientY / message.viewportHeight) * contentHeight,
+                });
+            } else if (message.type === 'keydown' || message.type === 'keyup') {
+                Object.assign(bridgedEvent, { key: message.key });
+            }
+
+            this.iframe.dispatchEvent(bridgedEvent);
+        };
+        window.addEventListener('message', this.messageHandler);
+        iframe.src = iframeUrl;
 
         // Create CSS plane
         this.createCssPlane(container);
+    }
+
+    dispose() {
+        this.screenListeners.forEach(([type, listener]) => document.removeEventListener(type, listener, false));
+        this.screenListeners = [];
+        if (this.loadTimeout !== null) window.clearTimeout(this.loadTimeout);
+        this.loadTimeout = null;
+        if (this.messageHandler) {
+            window.removeEventListener('message', this.messageHandler);
+            this.messageHandler = null;
+        }
+        this.iframe = null;
     }
 
     /**
@@ -229,12 +341,20 @@ export default class MonitorScreen extends EventEmitter {
         this.cssScene.add(object);
 
         // Create GL plane
-        const material = new THREE.MeshLambertMaterial();
-        material.side = THREE.DoubleSide;
-        material.opacity = 0;
-        material.transparent = true;
-        // NoBlending allows the GL plane to occlude the CSS plane
-        material.blending = THREE.NoBlending;
+        // Punch an RGBA(0, 0, 0, 0) hole in the WebGL canvas for CSS3D.
+        // A lit white Lambert mask writes bright RGB at zero alpha with NoBlending.
+        const material = new THREE.MeshBasicMaterial({
+            color: 0x000000,
+            side: THREE.DoubleSide,
+            opacity: 0,
+            transparent: true,
+            blending: THREE.NoBlending,
+            premultipliedAlpha: true,
+            depthTest: true,
+            depthWrite: true,
+            toneMapped: false,
+            fog: false,
+        });
 
         // Create plane geometry
         const geometry = new THREE.PlaneGeometry(
@@ -272,25 +392,25 @@ export default class MonitorScreen extends EventEmitter {
             smudge: {
                 texture: textures.monitorSmudgeTexture,
                 blending: THREE.AdditiveBlending,
-                opacity: 0.12,
+                opacity: 0.03,
                 offset: 24,
             },
             innerShadow: {
                 texture: textures.monitorShadowTexture,
                 blending: THREE.NormalBlending,
-                opacity: 1,
+                opacity: 0.12,
                 offset: 5,
             },
             video: {
                 texture: this.videoTextures['video-1'],
                 blending: THREE.AdditiveBlending,
-                opacity: 0.5,
+                opacity: 0.05,
                 offset: 10,
             },
             video2: {
                 texture: this.videoTextures['video-2'],
                 blending: THREE.AdditiveBlending,
-                opacity: 0.1,
+                opacity: 0.02,
                 offset: 15,
             },
         };
@@ -440,7 +560,7 @@ export default class MonitorScreen extends EventEmitter {
     createEnclosingPlane(plane: EnclosingPlane) {
         const material = new THREE.MeshBasicMaterial({
             side: THREE.DoubleSide,
-            color: 0x48493f,
+            color: 0x080b14,
         });
 
         const geometry = new THREE.PlaneGeometry(plane.size.x, plane.size.y);

@@ -1,0 +1,12 @@
+{
+  "url": "http://localhost:8080/?dev",
+  "browser": "Installed Chrome with fresh profile and software rendering",
+  "visualAcceptance": "PENDING",
+  "profile": "C:\\Users\\User\\Downloads\\Om_Portfolio\\phase-2c-artifacts\\browser-qa\\qa-profile-1792578751389",
+  "navigation": {
+    "frameId": "6723BC643A93ED9C31A37974ACC4059A",
+    "loaderId": "7BAFB142B394CF6B85785454562086FE",
+    "isDownload": false
+  },
+  "blocked": "Error: CDP timeout: Page.enable"
+}

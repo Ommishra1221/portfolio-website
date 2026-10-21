@@ -17,10 +17,21 @@ import Stats from 'stats.js';
 import Loading from './Utils/Loading';
 
 import UI from './UI';
+import GraphicsQuality from './Utils/GraphicsQuality';
+import { disposeScene } from './Utils/Dispose';
 
 let instance: Application | null = null;
 
 export default class Application {
+    quality: GraphicsQuality;
+    private destroyed = false;
+    private mediaMotion?: MediaQueryList;
+    private updateMedia = () => {
+        const pause = this.destroyed || this.time.paused || this.mediaMotion?.matches;
+        document.querySelectorAll<HTMLVideoElement>('#monitor-videos video').forEach(video => {
+            if (pause) video.pause(); else void video.play().catch(() => {});
+        });
+    };
     debug: Debug;
     sizes: Sizes;
     time: Time;
@@ -49,6 +60,7 @@ export default class Application {
         // window.Application = this;
 
         // Setup
+        this.quality = new GraphicsQuality();
         this.debug = new Debug();
         this.sizes = new Sizes();
         this.mouse = new Mouse();
@@ -59,11 +71,18 @@ export default class Application {
         this.overlayScene = new THREE.Scene();
         this.resources = new Resources(sources);
         this.camera = new Camera();
-        this.renderer = new Renderer();
+        try { this.renderer = new Renderer(); }
+        catch (error) { this.destroy(); throw error; }
         this.camera.createControls();
         this.world = new World();
 
         this.ui = new UI();
+        this.resources.on('ready.rendererQuality', () => this.renderer.invalidateQuality());
+        this.time.on('pause.application', () => { this.camera.resize(); this.updateMedia(); });
+        this.time.on('resume.application', this.updateMedia);
+        this.mediaMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+        this.mediaMotion.addEventListener('change', this.updateMedia);
+        this.updateMedia();
 
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.has('debug')) {
@@ -98,29 +117,22 @@ export default class Application {
     }
 
     destroy() {
-        this.sizes.off('resize');
-        this.time.off('tick');
-
-        // Traverse the whole scene
-        this.scene.traverse((child) => {
-            // Test if it's a mesh
-            if (child instanceof THREE.Mesh) {
-                child.geometry.dispose();
-
-                // Loop through the material properties
-                for (const key in child.material) {
-                    const value = child.material[key];
-
-                    // Test if there is a dispose function
-                    if (value && typeof value.dispose === 'function') {
-                        value.dispose();
-                    }
-                }
-            }
-        });
-
-        this.renderer.instance.dispose();
-
-        if (this.debug.active) this.debug.ui.destroy();
+        if (this.destroyed) return;
+        this.destroyed = true;
+        this.mediaMotion?.removeEventListener('change', this.updateMedia);
+        document.querySelectorAll<HTMLVideoElement>('#monitor-videos video').forEach(video => video.pause());
+        this.time?.dispose();
+        this.sizes?.dispose();
+        this.ui?.dispose();
+        this.camera?.dispose();
+        this.world?.dispose();
+        const disposed = new WeakSet<{dispose(): void}>();
+        if (this.scene) disposeScene(this.scene, disposed);
+        this.resources?.dispose(disposed);
+        this.renderer?.dispose();
+        this.cssScene?.clear(); this.overlayScene?.clear(); this.scene?.clear();
+        this.quality?.dispose();
+        this.stats?.dom.remove();
+        if (this.debug?.active) this.debug.ui.destroy();
     }
 }

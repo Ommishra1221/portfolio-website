@@ -1,6 +1,9 @@
 {
     "compilerOptions": {
         "target": "ES6",
+        "module": "esnext",
+        "lib": ["ES2019", "DOM", "DOM.Iterable"],
+        "types": ["react", "react-dom", "three"],
         "moduleResolution": "node",
         "strict": true,
         "paths": {

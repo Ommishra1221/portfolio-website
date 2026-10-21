@@ -1,0 +1,138 @@
+/*!*****************************************************************!*\
+  !*** css ./node_modules/css-loader/dist/cjs.js!./src/style.css ***!
+  \*****************************************************************/
+:root {
+    --portfolio-bg: #080b14;
+    --portfolio-panel: #0d1220;
+    --portfolio-cyan: #00e5ff;
+    --portfolio-violet: #8b5cf6;
+    --portfolio-magenta: #ff2d95;
+    --portfolio-text: #d5deeb;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+}
+
+html,
+body {
+    overflow: hidden;
+    background: var(--portfolio-bg);
+}
+
+.webgl {
+    position: fixed;
+    top: 0;
+    left: 0;
+    outline: none;
+}
+
+.jitter {
+    animation-duration: 0.3s;
+    animation-timing-function: ease-in-out;
+    animation-fill-mode: forwards;
+    animation-iteration-count: infinite;
+    animation-name: jittery;
+    z-index: -10;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .jitter { animation: none; }
+}
+
+.bios-start-button:focus-visible,
+.icon-control-container:focus-visible {
+    outline: 2px solid var(--portfolio-cyan, #00e5ff);
+    outline-offset: 5px;
+}
+
+.interface-wrapper {
+    width: 100%;
+    top: 64px;
+    left: 64px;
+}
+
+.icon-control-container {
+    height: 26.5px;
+    width: 26.5px;
+}
+
+@media only screen and (max-width: 768px) {
+    .interface-wrapper {
+        width: 100%;
+        top: 24px;
+        left: 24px;
+    }
+
+    .icon-control-container {
+        height: 19.5px;
+        width: 19.5px;
+    }
+}
+
+@keyframes jittery {
+    10% {
+        transform: translate(-0.1px, -0.15px) scale(1, 1);
+    }
+
+    20% {
+        transform: translate(0.15px, 0.1px) scale(1, 1);
+    }
+
+    30% {
+        transform: translate(-0.2px, -0.25px) scale(1, 1);
+    }
+
+    40% {
+        transform: translate(0.05px, 0.1px) scale(1, 1);
+    }
+
+    50% {
+        transform: translate(-0.025px, -0.05px) scale(1, 1);
+    }
+
+    60% {
+        transform: translate(0px, 0.075px) scale(1, 1);
+    }
+
+    70% {
+        transform: translate(-0.075px, -0.1px) scale(1, 1);
+    }
+
+    80% {
+        transform: translate(0.075px, 0.125px) scale(1, 1);
+    }
+
+    90% {
+        transform: translate(-0.125px, -0.075px) scale(1, 1);
+    }
+
+    100% {
+        transform: translate(0.075px, 0.025px) scale(1, 1);
+    }
+}
+
+.portfolio-entry {
+    width: min(36rem, 100%);
+    max-height: 100dvh;
+    overflow: auto;
+    box-sizing: border-box;
+    padding: clamp(20px, 5vw, 48px);
+    border: 1px solid var(--portfolio-violet);
+    background: var(--portfolio-panel);
+    color: var(--portfolio-text);
+    font: 1rem/1.6 system-ui, sans-serif;
+}
+.portfolio-entry h1 { font-size: clamp(1.5rem, 6vw, 2.2rem); }
+.portfolio-entry p { font: inherit; margin: 16px 0; color: inherit; }
+.portfolio-entry a, .portfolio-entry button {
+    display: block; min-height: 44px; box-sizing: border-box;
+    width: 100%; padding: 12px; margin-top: 16px;
+    background: #1b2436; color: #d5deeb; border: 1px solid #00e5ff;
+    border-radius: 4px; font: inherit; text-align: center; cursor: pointer;
+}
+.portfolio-entry :focus-visible { outline: 3px solid #00e5ff; outline-offset: 3px; }
+
+
+/*# sourceMappingURL=main.css.map*/

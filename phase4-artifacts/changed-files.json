@@ -1,0 +1,21 @@
+{
+  "changed": [
+    "src/Application/UI/App.tsx",
+    "src/Application/UI/index.ts",
+    "src/Application/UI/style.css",
+    "src/Application/World/Cyberpunk/CyberpunkRoom.ts",
+    "src/Application/World/Cyberpunk/Displays.ts",
+    "src/Application/World/Cyberpunk/Materials.ts",
+    "src/Application/World/Cyberpunk/MonitorArray.ts",
+    "src/Application/World/Cyberpunk/PCTower.ts",
+    "src/Application/World/Cyberpunk/RoomKit.ts",
+    "src/Application/World/Cyberpunk/Workstation.ts",
+    "src/Application/World/World.ts"
+  ],
+  "created": [
+    "src/Application/UI/components/HardwareControls.tsx",
+    "src/Application/World/Cyberpunk/HardwareDetails.ts",
+    "src/Application/World/Cyberpunk/HardwareInteraction.ts",
+    "src/Application/World/Cyberpunk/HardwareState.ts"
+  ]
+}

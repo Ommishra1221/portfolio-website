@@ -1,0 +1,169 @@
+{
+  "assetsByChunkName": {
+    "main": [
+      "main.css",
+      "bundle.f856250507b94b92.js",
+      "main.css.map",
+      "bundle.f856250507b94b92.js.map"
+    ]
+  },
+  "assets": [
+    {
+      "type": "assets by status",
+      "cached": true,
+      "filteredChildren": 73,
+      "size": 93363234
+    },
+    {
+      "type": "asset",
+      "name": "bundle.68fb85fc3543d271.js",
+      "size": 273413,
+      "emitted": true,
+      "comparedForEmit": false,
+      "cached": false,
+      "info": {
+        "immutable": true,
+        "contenthash": "68fb85fc3543d271",
+        "javascriptModule": false,
+        "related": {
+          "sourceMap": "bundle.68fb85fc3543d271.js.map"
+        },
+        "size": 273413
+      },
+      "chunkNames": [],
+      "chunkIdHints": [],
+      "auxiliaryChunkNames": [],
+      "auxiliaryChunkIdHints": [],
+      "filteredRelated": 1
+    },
+    {
+      "type": "asset",
+      "name": "bundle.f856250507b94b92.js",
+      "size": 173934,
+      "emitted": true,
+      "comparedForEmit": false,
+      "cached": false,
+      "info": {
+        "immutable": true,
+        "contenthash": "f856250507b94b92",
+        "javascriptModule": false,
+        "related": {
+          "sourceMap": "bundle.f856250507b94b92.js.map"
+        },
+        "size": 173934
+      },
+      "chunkNames": [
+        "main"
+      ],
+      "chunkIdHints": [],
+      "auxiliaryChunkNames": [],
+      "auxiliaryChunkIdHints": [],
+      "filteredRelated": 1
+    },
+    {
+      "type": "asset",
+      "name": "index.html",
+      "size": 2644,
+      "emitted": true,
+      "comparedForEmit": false,
+      "cached": false,
+      "info": {
+        "size": 2644
+      },
+      "chunkNames": [],
+      "chunkIdHints": [],
+      "auxiliaryChunkNames": [],
+      "auxiliaryChunkIdHints": []
+    }
+  ],
+  "chunks": [
+    {
+      "rendered": true,
+      "initial": true,
+      "entry": true,
+      "recorded": false,
+      "size": 145992,
+      "sizes": {
+        "javascript": 133273,
+        "css/mini-extract": 2827,
+        "runtime": 9892
+      },
+      "names": [
+        "main"
+      ],
+      "idHints": [],
+      "runtime": [
+        "main"
+      ],
+      "files": [
+        "main.css",
+        "bundle.f856250507b94b92.js"
+      ],
+      "auxiliaryFiles": [
+        "bundle.f856250507b94b92.js.map",
+        "main.css.map"
+      ],
+      "hash": "2da74a0a8194745b",
+      "childrenByOrder": {}
+    },
+    {
+      "rendered": true,
+      "initial": false,
+      "entry": false,
+      "recorded": false,
+      "size": 215853,
+      "sizes": {
+        "javascript": 204843,
+        "asset": 4063,
+        "css/mini-extract": 6947
+      },
+      "names": [],
+      "idHints": [],
+      "runtime": [
+        "main"
+      ],
+      "files": [
+        "src_Application_Application_ts.css",
+        "bundle.68fb85fc3543d271.js"
+      ],
+      "auxiliaryFiles": [
+        "assets/images/0a262c7c9669cd40.svg",
+        "assets/images/8bbd53f7e797a91c.svg",
+        "assets/images/e2b639cbd11be706.svg",
+        "assets/images/fa9623e40006eda6.svg",
+        "bundle.68fb85fc3543d271.js.map",
+        "src_Application_Application_ts.css.map"
+      ],
+      "hash": "ea04e2d2cda8a386",
+      "childrenByOrder": {}
+    },
+    {
+      "rendered": false,
+      "initial": false,
+      "entry": false,
+      "recorded": false,
+      "reason": "split chunk (cache group: defaultVendors)",
+      "size": 2786355,
+      "sizes": {
+        "javascript": 2786355
+      },
+      "names": [],
+      "idHints": [
+        "vendors"
+      ],
+      "runtime": [
+        "main"
+      ],
+      "files": [
+        "bundle.b2705c10b14c8f5d.js"
+      ],
+      "auxiliaryFiles": [
+        "bundle.b2705c10b14c8f5d.js.map"
+      ],
+      "hash": "1517e3926d4869f7",
+      "childrenByOrder": {}
+    }
+  ],
+  "errors": [],
+  "warnings": []
+}

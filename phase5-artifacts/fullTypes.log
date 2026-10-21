@@ -1,0 +1,3 @@
+node_modules/@types/node/globals.d.ts(72,13): error TS2403: Subsequent variable declarations must have the same type.  Variable 'AbortSignal' must be of type '{ new (): AbortSignal; prototype: AbortSignal; abort(reason?: any): AbortSignal; timeout(milliseconds: number): AbortSignal; }', but here has type '{ new (): AbortSignal; prototype: AbortSignal; }'.
+node_modules/@types/ws/index.d.ts(336,18): error TS2315: Type 'Server' is not generic.
+node_modules/@types/ws/index.d.ts(336,34): error TS2315: Type 'Server' is not generic.

@@ -1,0 +1,5 @@
+{
+  "status": "PASS",
+  "checks": 5,
+  "note": "Compiler strict/library checking remains enabled; a genuine application type error injected in memory is still rejected. No source files altered."
+}

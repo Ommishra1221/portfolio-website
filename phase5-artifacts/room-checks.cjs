@@ -1,0 +1,61 @@
+const fs=require('fs'),path=require('path'),assert=require('node:assert/strict'),crypto=require('crypto');
+const {root,THREE,createLoader,metrics}=require('../phase4-artifacts/load-module.cjs');
+const load=createLoader();
+const Room=load(path.join(root,'src/Application/World/Cyberpunk/CyberpunkRoom.ts')).default;
+const room=new Room();room.updateMatrixWorld(true);
+let checks=0;function check(value,label){assert.ok(value,label);checks++;}
+const current=metrics(room),baseline=JSON.parse(fs.readFileSync(path.join(__dirname,'../phase4-artifacts/baseline-metrics.json')));
+check(current.triangles<baseline.triangles,'detail refinements remain below baseline triangles');
+check(current.meshSubmissions<=baseline.meshSubmissions+20,'bounded mesh submission increase');
+check(current.lights===5&&current.shadowLights===1&&current.transparentMeshes===1,'light/shadow/transparency budget preserved');
+const caps=room.getObjectByName('Keycaps/67');
+check(caps.isInstancedMesh&&caps.count===67&&caps.geometry.index.count/3===50,'67 original 50-triangle sculpted caps');
+check(caps.geometry.attributes.uv.count===caps.geometry.attributes.position.count,'keycap microtexture UVs present');
+for(const name of ['RearVentilation','StandHinges','InstancedFanHousings','MotherboardCapacitors','GPUShroudIntakes','WheelTreads','InstancedCasters'])check(room.getObjectByName(name),'detail '+name);
+function hasInstanceAt(point){
+ let found=false;const matrix=new THREE.Matrix4(),position=new THREE.Vector3();
+ room.traverse(o=>{if(o instanceof THREE.InstancedMesh)for(let i=0;i<o.count;i++){
+  o.getMatrixAt(i,matrix);position.setFromMatrixPosition(matrix.premultiply(o.matrixWorld));
+  if(position.distanceTo(new THREE.Vector3(...point))<0.01)found=true;
+ }});return found;
+}
+check(hasInstanceAt([2620,100,820]),'batched cable comb geometry exists');
+check(hasInstanceAt([400,-277,1596]),'batched typing indicator geometry exists');
+check(room.targets.length===2&&room.targets.every(t=>t.objects.length===2&&t.objects.every(Boolean)),'explicit actual-mesh registry');
+const practical=room.getObjectByName('WarmPractical'),fill=room.getObjectByName('AmbientFill');
+const originalFill=fill.intensity,originalPractical=practical.intensity;
+const material=name=>[...room.kit.materials].find(m=>m.name===name);
+const cyanIntensity=material('cyan').emissiveIntensity;
+room.hardware.toggle('lamp');room.update(16,false);
+check(practical.intensity>0&&practical.intensity<originalPractical,'lamp fades via existing update');
+room.update(16,true);
+check(practical.intensity===0&&!practical.visible&&fill.intensity===originalFill,'reduced motion switches practical immediately, global readability fill unchanged');
+room.hardware.toggle('pc');room.update(16,true);
+check(material('PCCyan').emissiveIntensity===0&&material('PCViolet').emissiveIntensity===0&&material('cyan').emissiveIntensity===cyanIntensity,'PC toggle isolates decorative materials');
+const matrices=caps.instanceMatrix.array.slice(),angles=room.rotors.map(r=>r.rotation.z);
+room.hardware.pulseTyping();room.update(16,false);
+check(material('KeyboardStatus').emissiveIntensity>0.12,'typing feedback is small status emission');
+check(matrices.every((n,i)=>n===caps.instanceMatrix.array[i]),'typing never changes individual key transforms');
+room.update(16,true);check(room.hardware.typingEnergy===0&&material('KeyboardStatus').emissiveIntensity===0.12,'reduced motion clears typing feedback');
+const stopped=room.rotors.map(r=>r.rotation.z);room.update(16,true);
+check(room.rotors.every((r,i)=>r.rotation.z===stopped[i]),'reduced motion freezes rotor transforms');
+room.hardware.toggle('lamp');room.hardware.toggle('pc');room.update(16,true);
+check(practical.visible&&practical.intensity===originalPractical&&material('PCCyan').emissiveIntensity>0,'controls restore exact original light levels');
+room.update(16,false);check(room.rotors.every((r,i)=>r.rotation.z>angles[i]),'fans continue independently of decorative LEDs');
+let ownedDisposed=0,instanceDisposed=0;
+const resources=[...room.kit.geometries,...room.kit.materials,...room.kit.textures];
+resources.forEach(r=>r.addEventListener('dispose',()=>ownedDisposed++));
+room.traverse(o=>{if(o instanceof THREE.InstancedMesh)o.addEventListener('dispose',()=>instanceDisposed++);});
+for(let i=0;i<500;i++)room.update(16,false);
+const start=process.hrtime.bigint();for(let i=0;i<20000;i++)room.update(16,false);
+const elapsedMs=Number(process.hrtime.bigint()-start)/1e6;
+room.dispose();room.dispose();
+check(ownedDisposed===resources.length&&instanceDisposed===current.instanceBatches,'all owned resources/instance buffers disposed once');
+check(room.children.length===0&&room.targets.length===0&&room.rotors.length===0&&!room.hardware.getSnapshot().available,'disposed room releases animation and target references');
+const manifest=JSON.parse(fs.readFileSync(path.join(__dirname,'../phase4-artifacts/protected-baseline.json')));
+const hash=p=>crypto.createHash('sha256').update(fs.readFileSync(p)).digest('hex');
+for(const [file,expected] of Object.entries(manifest.protected).filter(([file])=>file!=='src/Application/Camera/Camera.ts'))check(hash(path.join(root,file))===expected,'protected '+file);
+for(const [file,expected] of Object.entries(manifest.inner))check(hash(path.join(root,'../portfolio-inner-site',file))===expected,'inner unchanged '+file);
+const result={status:'PASS',checks,baseline,current,ownedResources:resources.length,
+ cpuUpdateSample:{iterations:20000,totalMilliseconds:elapsedMs,microsecondsPerUpdate:elapsedMs*1000/20000,note:'Node CPU-only steady-state room.update microbenchmark after warmup; excludes rendering, raycasts, DOM, shadows and browser frame scheduling. Not FPS or GPU time.'}};
+fs.writeFileSync(path.join(__dirname,'scene-results.json'),JSON.stringify(result,null,2));console.log(JSON.stringify(result,null,2));

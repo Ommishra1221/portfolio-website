@@ -1,0 +1,9 @@
+{
+  "status": "PASS",
+  "checks": 26,
+  "resourceCounts": {
+    "current": 13,
+    "legacy": 19
+  },
+  "note": "Camera tweens/projections execute with actual Three.js and Tween.js. Orbit DOM controller, audio and iframe construction use test doubles; no physical browser interaction claim."
+}

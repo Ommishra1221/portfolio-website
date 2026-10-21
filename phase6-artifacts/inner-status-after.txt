@@ -1,0 +1,27 @@
+ M public/index.html
+ M public/manifest.json
+ M src/components/applications/Credits.tsx
+ M src/components/applications/Henordle.tsx
+ M src/components/applications/ShowcaseExplorer.tsx
+ M src/components/general/Link.tsx
+ M src/components/os/Desktop.tsx
+ M src/components/os/DesktopShortcut.tsx
+ M src/components/os/ShutdownSequence.tsx
+ M src/components/os/Toolbar.tsx
+ M src/components/os/Window.tsx
+ M src/components/showcase/About.tsx
+ M src/components/showcase/Contact.tsx
+ M src/components/showcase/Experience.tsx
+ M src/components/showcase/Home.tsx
+ M src/components/showcase/Projects.tsx
+ M src/components/showcase/ResumeDownload.tsx
+ M src/components/showcase/VerticalNavbar.tsx
+ M src/components/showcase/projects/Art.tsx
+ M src/components/showcase/projects/Music.tsx
+ M src/components/showcase/projects/Software.tsx
+ M src/constants/colors.ts
+ M src/hooks/useInitialWindowSize.ts
+ M src/index.css
+ M src/index.tsx
+?? src/bridge/
+?? src/constants/portfolioContent.ts

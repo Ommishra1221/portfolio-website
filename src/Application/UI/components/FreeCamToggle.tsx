@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import UIEventBus from '../EventBus';
 import { Easing } from '../Animation';
+import { dispatchSyntheticMonitorKey } from '../../Utils/MonitorSyntheticEvents';
 // @ts-ignore
 import camera from '../../../../static/textures/UI/camera.svg';
 // @ts-ignore
@@ -14,6 +15,7 @@ const MuteToggle: React.FC<MuteToggleProps> = ({}) => {
     const [isActive, setIsActive] = useState(false);
     const [freeCamActive, setFreeCamActive] = useState(false);
     const [blockEvents, setBlockEvents] = useState(true);
+    useEffect(() => UIEventBus.on('freeCamReset', () => setFreeCamActive(false)), []);
 
     const onMouseDownHandler = useCallback(
         (event) => {
@@ -37,14 +39,13 @@ const MuteToggle: React.FC<MuteToggleProps> = ({}) => {
     }, []);
 
     useEffect(() => {
-        setTimeout(() => {
-            setBlockEvents(false);
-        }, 100);
+        const timer = setTimeout(() => setBlockEvents(false), 100);
+        return () => clearTimeout(timer);
     }, []);
 
     useEffect(() => {
         if (!blockEvents) {
-            window.postMessage({ type: 'keydown', key: `_AUTO_` }, '*');
+            dispatchSyntheticMonitorKey('_AUTO_');
             UIEventBus.dispatch('freeCamToggle', freeCamActive);
         }
     }, [freeCamActive]);
@@ -59,6 +60,14 @@ const MuteToggle: React.FC<MuteToggleProps> = ({}) => {
                 onMouseUp={onMouseUpHandler}
                 className="icon-control-container"
                 id="prevent-click"
+                role="button"
+                tabIndex={0}
+                aria-label="Toggle free camera"
+                aria-pressed={freeCamActive}
+                onKeyDown={(event) => {
+                    if (!event.repeat && (event.key === 'Enter' || event.key === ' ')) onMouseDownHandler(event);
+                }}
+                onKeyUp={onMouseUpHandler}
             >
                 <motion.img
                     id="prevent-click"

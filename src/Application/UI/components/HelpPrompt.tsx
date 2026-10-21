@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 // import eventBus from '../EventBus';
 import { motion } from 'framer-motion';
 import UIEventBus from '../EventBus';
+import { dispatchSyntheticMonitorKey } from '../../Utils/MonitorSyntheticEvents';
 
 const HELP_TEXT = 'Click anywhere to begin';
 
@@ -11,38 +12,43 @@ const HelpPrompt: React.FC<HelpPromptProps> = () => {
     const [helpText, setHelpText] = useState('');
     const [visible, setVisible] = useState(true);
     const visRef = useRef(visible);
+    const timers = useRef<Array<ReturnType<typeof setTimeout>>>([]);
 
     const typeHelpText = (i: number, curText: string) => {
         if (i < HELP_TEXT.length && visRef.current) {
-            setTimeout(() => {
-                window.postMessage(
-                    { type: 'keydown', key: `_AUTO_${HELP_TEXT[i]}` },
-                    '*'
-                );
+            timers.current.push(setTimeout(() => {
+                dispatchSyntheticMonitorKey(`_AUTO_${HELP_TEXT[i]}`);
 
                 setHelpText(curText + HELP_TEXT[i]);
                 typeHelpText(i + 1, curText + HELP_TEXT[i]);
-            }, Math.random() * 120 + 50);
+            }, Math.random() * 120 + 50));
         }
     };
 
     // make a document listener to listen to clicks
 
     useEffect(() => {
-        setTimeout(() => {
-            typeHelpText(0, '');
+        visRef.current = true;
+        const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const initial = setTimeout(() => {
+            if (reducedMotion) setHelpText(HELP_TEXT);
+            else typeHelpText(0, '');
         }, 500);
-        document.addEventListener('mousedown', () => {
-            setVisible(false);
-        });
-        UIEventBus.on('enterMonitor', () => {
-            setVisible(false);
-        });
+        const hide = () => setVisible(false);
+        document.addEventListener('mousedown', hide);
+        const unsubscribe = UIEventBus.on('enterMonitor', hide);
+        return () => {
+            visRef.current = false;
+            clearTimeout(initial);
+            timers.current.forEach(clearTimeout);
+            document.removeEventListener('mousedown', hide);
+            unsubscribe();
+        };
     }, []);
 
     useEffect(() => {
         if (visible == false) {
-            window.postMessage({ type: 'keydown', key: `_AUTO_` }, '*');
+            dispatchSyntheticMonitorKey('_AUTO_');
         }
         visRef.current = visible;
     }, [visible]);
@@ -51,6 +57,7 @@ const HelpPrompt: React.FC<HelpPromptProps> = () => {
         <motion.div
             variants={vars}
             animate={visible ? 'visible' : 'hide'}
+            transition={window.matchMedia('(prefers-reduced-motion: reduce)').matches ? {duration: 0} : undefined}
             style={styles.container}
         >
             <p>{helpText}</p>

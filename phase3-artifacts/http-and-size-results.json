@@ -1,0 +1,27 @@
+{
+  "responses": [
+    {
+      "url": "http://localhost:8080/?dev",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:8080/bundle.7e4bc9c0225c2582.js",
+      "containsCyberpunkRoom": true,
+      "containsCompilerFailure": false
+    },
+    {
+      "url": "http://localhost:8080/?dev&legacyRoom",
+      "status": 200
+    },
+    {
+      "url": "http://localhost:3000/",
+      "status": 200
+    }
+  ],
+  "productionBundle": {
+    "file": "bundle.905c64207b1a312e.js",
+    "bytes": 957367,
+    "gzipBytes": 257359
+  },
+  "note": "HTTP checks and file sizes only; no browser execution or FPS measurement."
+}

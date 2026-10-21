@@ -4,6 +4,7 @@ import Time from '../Utils/Time';
 import Application from '../Application';
 import Mouse from '../Utils/Mouse';
 import Sizes from '../Utils/Sizes';
+import { CENTER_SCREEN, SIDE_SCREEN } from '../World/MonitorConfig';
 
 export class CameraKeyframeInstance {
     position: THREE.Vector3;
@@ -59,6 +60,11 @@ export class MonitorKeyframe extends CameraKeyframeInstance {
         const aspect = this.sizes.height / this.sizes.width;
         const additionalZoom = this.sizes.width < 768 ? 0 : 600;
         this.targetPos.z = this.origin.z + aspect * 1200 - additionalZoom;
+        // Fit both edges of the wider screen, including the forward compositor layers.
+        const halfHeight = Math.max(CENTER_SCREEN.height / 2, CENTER_SCREEN.width / 2 * aspect);
+        const halfFov = THREE.MathUtils.degToRad(this.application.camera.instance.fov / 2);
+        this.targetPos.z = Math.max(this.targetPos.z,
+            CENTER_SCREEN.position[2] + CENTER_SCREEN.compositorDepth + halfHeight * 1.12 / Math.tan(halfFov));
         this.position.copy(this.targetPos);
     }
 }
@@ -105,6 +111,11 @@ export class DeskKeyframe extends CameraKeyframeInstance {
 
         const aspect = this.sizes.height / this.sizes.width;
         this.targetPos.z = this.origin.z + aspect * 3000 - 1800;
+        // Leave room for all three displays even at the existing pointer-drift extremes.
+        const halfWidth = SIDE_SCREEN.offset + SIDE_SCREEN.width / 2 + 64 + this.sizes.width / 2;
+        const halfFov = THREE.MathUtils.degToRad(this.application.camera.instance.fov / 2);
+        this.targetPos.z = Math.max(this.targetPos.z,
+            CENTER_SCREEN.position[2] + halfWidth * aspect * 1.06 / Math.tan(halfFov));
 
         this.focalPoint.copy(this.targetFoc);
         this.position.copy(this.targetPos);
@@ -119,7 +130,7 @@ export class IdleKeyframe extends CameraKeyframeInstance {
         const keyframe = keys.idle;
         super(keyframe);
         this.origin = new THREE.Vector3().copy(keyframe.position);
-        this.time = new Time();
+        this.time = new Application().time;
     }
 
     update() {

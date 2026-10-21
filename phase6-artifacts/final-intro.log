@@ -1,0 +1,5 @@
+{
+  status: 'PASS',
+  checks: 38,
+  note: 'Real Three.js and Tween.js; DOM/OrbitControls fixtures. No rendered camera-path acceptance.'
+}

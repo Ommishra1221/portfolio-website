@@ -1,0 +1,15 @@
+{
+  "status": "PASS",
+  "checks": 67480,
+  "counts": {
+    "meshDraws": 97,
+    "instances": 581,
+    "triangles": 42156,
+    "lights": 5,
+    "shadowLights": 1,
+    "transparentMeshes": 1
+  },
+  "resources": 77,
+  "instancedMeshes": 60,
+  "note": "Actual Three.js CPU geometry/ray tests; no WebGL rendering, FPS, GPU memory, or visual acceptance claim."
+}

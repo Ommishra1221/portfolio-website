@@ -1,0 +1,5 @@
+{
+  "status": "PASS",
+  "checks": 5,
+  "note": "Actual Application.destroy body, disposal helper and CSS3DObject removed lifecycle with subsystem spies. Full singleton reconstruction intentionally requires reload."
+}

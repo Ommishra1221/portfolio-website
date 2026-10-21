@@ -1,0 +1,1 @@
+PASS: window bounds, maximize, viewport shrink, restore, drag, resize, minimize callback and unmount (jsdom; CSS geometry not rendered).

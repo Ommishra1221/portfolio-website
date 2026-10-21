@@ -1,0 +1,5 @@
+{
+  status: 'PASS',
+  checks: 24,
+  note: 'Real scene graph/model with simulated WebGL contexts; no GPU rendering or driver restoration acceptance.'
+}

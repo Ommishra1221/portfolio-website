@@ -1,3 +1,5 @@
+import { usesLegacyRoom } from './World/Cyberpunk/RoomMode';
+
 const sources: Resource[] = [
     {
         name: 'computerSetupModel',
@@ -96,4 +98,11 @@ const sources: Resource[] = [
     },
 ];
 
-export default sources;
+const legacyRoomResources = new Set([
+    'computerSetupModel', 'computerSetupTexture', 'environmentModel',
+    'environmentTexture', 'decorModel', 'decorTexture',
+]);
+
+export default usesLegacyRoom(window.location.search)
+    ? sources
+    : sources.filter(source => !legacyRoomResources.has(source.name));

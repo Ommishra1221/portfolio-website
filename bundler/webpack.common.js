@@ -36,7 +36,12 @@ module.exports = {
             },
             {
                 test: /\.ts?$/,
-                use: 'ts-loader',
+                use: {
+                    loader: 'ts-loader',
+                    options: {
+                        configFile: path.resolve(__dirname, '../src/tsconfig.json'),
+                    },
+                },
                 exclude: /node_modules/,
             },
             // JS
